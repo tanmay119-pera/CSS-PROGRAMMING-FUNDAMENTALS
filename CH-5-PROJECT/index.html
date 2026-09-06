@@ -1,369 +1,813 @@
 <!DOCTYPE html>
-<!--
-  =====================================================================
-  PULSE — AN "ANTI-FRAMEWORK" ADMIN DASHBOARD
-  =====================================================================
-  The whole point of this project: prove that a sidebar + topbar +
-  responsive card grid does NOT need React, Bootstrap, or Tailwind.
-  Three plain files — HTML, CSS, JS — no build step, no dependencies
-  except a Google Font link. Open index.html in a browser and it works.
-
-  How the files talk to each other:
-    index.html  -> structure (what exists on the page)
-    style.css   -> presentation (how it looks / lays out / responds)
-    script.js   -> behaviour (what happens when you click things)
-
-  Read the comments in each file — they explain the "why", not just
-  the "what". That's the part tutorials usually skip.
-  =====================================================================
--->
-<html lang="en" data-theme="light">
-<!--
-  data-theme="light" starts us in light mode. script.js flips this
-  attribute to "dark" when the theme toggle is clicked, and our CSS
-  has a matching [data-theme="dark"] block of variable overrides.
-  This is the classic "data attribute as a styling hook" pattern —
-  no JS framework state, just one attribute the CSS reacts to.
--->
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pulse — Admin Dashboard</title>
-
-  <!-- Two Google Fonts: Sora for headings/numbers (has personality),
-       Inter for body text and UI labels (reads well at small sizes).
-       Using two fonts on purpose, each with one job — not five. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>friday-framework | Anti-Framework Admin Dashboard</title>
+  
+  <!-- Modern Clean Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Zero-dependency Modern CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!--
-    OVERLAY: a full-screen dark backdrop that only appears on mobile
-    when the sidebar is open. Clicking it closes the sidebar again.
-    It starts hidden — CSS gives it display:none until JS adds the
-    "is-visible" class.
-  -->
-  <div class="overlay" id="overlay"></div>
+  <!-- ==========================================================================
+       TOP PROGRESS / LOADING BAR
+       A slim, glowing loading bar fixed to the very top of the viewport.
+       Vanilla JS animates its width and opacity to simulate realistic page/data loads.
+       ========================================================================== -->
+  <div id="top-loader" class="top-loader" aria-hidden="true"></div>
 
-  <!--
-    .app is the OUTER GRID: two columns (sidebar, main) on desktop.
-    This single CSS Grid declaration is what replaces an entire
-    "layout system" from a framework. See style.css for the grid rule.
-  -->
-  <div class="app">
+  <!-- Toast Notification Container (Fixed floating notices) -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <!-- ============================= SIDEBAR ============================= -->
-    <!--
-      aria-hidden isn't set here because the sidebar is always part of
-      the page for screen readers — on mobile it just slides in/out
-      visually. id="sidebar" is targeted by both CSS (.is-open) and JS.
-    -->
-    <aside class="sidebar" id="sidebar">
+  <!-- Main Application Wrapper: Pure CSS Grid layout (Sidebar + Main Viewport) -->
+  <div class="app-layout" id="app-layout">
 
-      <div class="sidebar__brand">
-        <span class="brand-mark" aria-hidden="true">
-          <!-- A simple heartbeat-line icon — ties the "Pulse" name to its logo -->
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12h4l2-7 4 14 2-7h6" />
+    <!-- ========================================================================
+         SIDEBAR NAVIGATION
+         Fixed / collapsible navigation with branding, routes, and admin profile.
+         Using modern CSS variables, this expands and collapses without layout jump.
+         ======================================================================== -->
+    <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+      
+      <!-- Brand Logo Header -->
+      <div class="sidebar-header">
+        <a href="#" class="brand-logo" title="friday-framework">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">friday<span class="brand-accent">.</span></span>
+            <span class="brand-badge">ANTI-FRAMEWORK</span>
+          </div>
+        </a>
+
+        <!-- Collapse toggle button for desktop -->
+        <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Sidebar (Ctrl+B)" aria-label="Toggle Sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
-        </span>
-        <span class="brand-name">Pulse</span>
+        </button>
       </div>
 
-      <!-- Primary navigation. aria-label distinguishes it from any other <nav> for screen reader users -->
-      <nav class="sidebar__nav" aria-label="Primary">
+      <!-- Navigation Links Container -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">MAIN MENU</div>
+        
         <ul class="nav-list">
-          <li>
-            <a href="#" class="nav-link is-active" data-page="Overview">
-              <span class="nav-link__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              </span>
-              Overview
+          <!-- Active Nav Item -->
+          <li class="nav-item active">
+            <a href="#" class="nav-link" data-route="dashboard">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              <span class="nav-label">Dashboard</span>
+              <span class="nav-indicator"></span>
             </a>
           </li>
-          <li>
-            <a href="#" class="nav-link" data-page="Analytics">
-              <span class="nav-link__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              </span>
-              Analytics
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-route="analytics">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              <span class="nav-label">Analytics</span>
+              <span class="badge badge-emerald">Live</span>
             </a>
           </li>
-          <li>
-            <a href="#" class="nav-link" data-page="Customers">
-              <span class="nav-link__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </span>
-              Customers
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-route="deployments">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+              </svg>
+              <span class="nav-label">Deployments</span>
+              <span class="badge badge-blue">8</span>
             </a>
           </li>
-          <li>
-            <a href="#" class="nav-link" data-page="Orders">
-              <span class="nav-link__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              </span>
-              Orders
-            </a>
-          </li>
-          <li>
-            <a href="#" class="nav-link" data-page="Reports">
-              <span class="nav-link__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-              </span>
-              Reports
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-route="logs">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"></polyline>
+                <line x1="12" y1="19" x2="20" y2="19"></line>
+              </svg>
+              <span class="nav-label">System Logs</span>
             </a>
           </li>
         </ul>
 
-        <!-- A visual + semantic break: settings lives apart from the main nav -->
-        <ul class="nav-list nav-list--secondary">
-          <li>
-            <a href="#" class="nav-link" data-page="Settings">
-              <span class="nav-link__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-              </span>
-              Settings
+        <div class="nav-section-label">ADMINISTRATION</div>
+
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-route="users">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span class="nav-label">Team & Access</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-route="settings">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              <span class="nav-label">Settings</span>
             </a>
           </li>
         </ul>
       </nav>
 
-      <!-- Small user card pinned to the bottom of the sidebar via flexbox (margin-top:auto) -->
-      <div class="sidebar__user">
-        <span class="avatar" aria-hidden="true">AC</span>
-        <div class="sidebar__user-info">
-          <p class="sidebar__user-name">Alex Chen</p>
-          <p class="sidebar__user-role">Admin</p>
+      <!-- Sidebar Footer: Admin Profile Card for 'tanmay' -->
+      <div class="sidebar-footer">
+        <div class="user-card" id="user-profile-card">
+          <div class="user-avatar-container">
+            <!-- Sleek initials avatar with active pulse dot -->
+            <div class="user-avatar">T</div>
+            <span class="status-dot status-online" title="Status: Online"></span>
+          </div>
+          <div class="user-info">
+            <span class="user-name">tanmay</span>
+            <span class="user-role">Super Admin</span>
+          </div>
+          <button class="user-action-btn" title="Quick Profile Menu" id="user-menu-btn" aria-label="User Options">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1"></circle>
+              <circle cx="12" cy="5" r="1"></circle>
+              <circle cx="12" cy="19" r="1"></circle>
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
 
-    <!-- ============================= MAIN COLUMN ============================= -->
-    <div class="main">
+    <!-- Overlay backdrop for mobile when sidebar is open -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-      <!-- ---------- TOPBAR ---------- -->
-      <header class="topbar">
+    <!-- ========================================================================
+         MAIN CONTENT AREA (Top Nav Bar + Dashboard Grid)
+         ======================================================================== -->
+    <div class="main-wrapper">
 
-        <!-- Only visible on small screens (see CSS media query). Opens the sidebar. -->
-        <button class="icon-btn" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
+      <!-- TOP NAVIGATION BAR -->
+      <header class="top-nav" id="top-nav">
+        <div class="top-nav-left">
+          <!-- Mobile Menu Hamburger -->
+          <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open Navigation Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
 
-        <!-- JS updates this text when a different nav link is clicked -->
-        <h1 class="topbar__title" id="pageTitle">Overview</h1>
-
-        <div class="topbar__search">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" placeholder="Search…" aria-label="Search the dashboard" />
+          <!-- Breadcrumbs -->
+          <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <span class="breadcrumb-item">friday-framework</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active" id="current-page-crumb">Production Overview</span>
+          </nav>
         </div>
 
-        <div class="topbar__actions">
+        <!-- Center Search Bar (Real-time filter for table & commands) -->
+        <div class="top-nav-center">
+          <div class="search-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="global-search-input" placeholder="Search servers, deployments, logs..." autocomplete="off">
+            <kbd class="shortcut-key">⌘K</kbd>
+          </div>
+        </div>
 
-          <!-- Theme toggle: holds BOTH icons; CSS shows/hides the right one based on data-theme -->
-          <button class="icon-btn" id="themeToggle" aria-label="Switch to dark mode">
-            <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
-            <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        <!-- Top Right Actions -->
+        <div class="top-nav-right">
+          
+          <!-- Sync / Refresh Metrics Button (Working micro-interaction) -->
+          <button id="refresh-metrics-btn" class="btn btn-secondary btn-icon-text" title="Sync live metrics">
+            <svg class="spin-target" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>Sync</span>
           </button>
 
-          <button class="icon-btn" aria-label="Notifications">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="badge-dot" aria-hidden="true"></span>
+          <!-- Quick Action: Open New Deployment Modal -->
+          <button id="open-deploy-modal-btn" class="btn btn-primary btn-icon-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>New Deploy</span>
           </button>
 
-          <!-- Avatar dropdown: a button that toggles a hidden menu. This is the
-               same open/close pattern as the mobile sidebar, just smaller. -->
-          <div class="avatar-menu">
-            <button class="avatar-menu__trigger" id="avatarBtn" aria-haspopup="true" aria-expanded="false" aria-controls="avatarDropdown">
-              <span class="avatar avatar--sm" aria-hidden="true">AC</span>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          <!-- Notification Bell with Ping Dot -->
+          <div class="notification-wrapper">
+            <button id="notifications-btn" class="btn-icon" aria-label="Notifications" title="Notifications">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="notification-ping" id="notif-badge"></span>
             </button>
-            <div class="avatar-menu__dropdown" id="avatarDropdown" role="menu">
-              <a href="#" role="menuitem">Your profile</a>
-              <a href="#" role="menuitem">Account settings</a>
-              <a href="#" role="menuitem">Log out</a>
+
+            <!-- Notifications Dropdown Popover -->
+            <div class="notifications-dropdown" id="notifications-dropdown">
+              <div class="notif-header">
+                <span class="notif-title">Notifications</span>
+                <button class="notif-clear-btn" id="mark-read-btn">Mark all read</button>
+              </div>
+              <ul class="notif-list">
+                <li class="notif-item unread">
+                  <div class="notif-icon notif-icon-emerald">✓</div>
+                  <div class="notif-content">
+                    <p class="notif-msg">Cluster us-east-2 scaled smoothly to 14 nodes.</p>
+                    <span class="notif-time">2 mins ago</span>
+                  </div>
+                </li>
+                <li class="notif-item unread">
+                  <div class="notif-icon notif-icon-blue">🚀</div>
+                  <div class="notif-content">
+                    <p class="notif-msg">Deployment #8491 succeeded with 0 errors.</p>
+                    <span class="notif-time">14 mins ago</span>
+                  </div>
+                </li>
+                <li class="notif-item">
+                  <div class="notif-icon notif-icon-amber">⚡</div>
+                  <div class="notif-content">
+                    <p class="notif-msg">High traffic burst handled by Cloudflare Edge.</p>
+                    <span class="notif-time">1 hour ago</span>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
+
+          <!-- Quick User Avatar in Header -->
+          <div class="header-profile" id="header-profile-trigger">
+            <div class="user-avatar-sm">T</div>
+            <span class="header-username">tanmay</span>
+          </div>
+
         </div>
       </header>
 
-      <!-- ---------- PAGE CONTENT ---------- -->
-      <main class="content">
+      <!-- ======================================================================
+           MAIN DASHBOARD CONTENT
+           Built entirely with CSS Grid & Flexbox. No 200KB JS runtime needed.
+           ====================================================================== -->
+      <main class="dashboard-content" id="main-content">
 
-        <!--
-          METRIC CARDS. This is a CSS Grid with auto-fit + minmax — it decides
-          on its own how many cards fit per row at the current width. No JS,
-          no breakpoints needed just for the card count. See style.css.
-          data-target / data-prefix / data-suffix are read by script.js to
-          animate each number counting up from 0 on page load.
-        -->
-        <section class="metrics-grid" aria-label="Key metrics">
+        <!-- Welcome Banner & Controls Header -->
+        <section class="welcome-section">
+          <div class="welcome-copy">
+            <h1 class="welcome-title">Welcome back, <span class="highlight-text">Tanmay</span> 👋</h1>
+            <p class="welcome-subtitle">All 8 microservices operational across 3 edge locations. Zero framework overhead.</p>
+          </div>
 
-          <article class="metric-card">
-            <div class="metric-card__icon metric-card__icon--gold" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
-            <p class="metric-card__label">Total revenue</p>
-            <p class="metric-card__value" data-target="128450" data-prefix="$">$0</p>
-            <p class="metric-card__trend metric-card__trend--up">
-              <span class="trend-arrow" aria-hidden="true"></span> 12.4% vs last month
-            </p>
-          </article>
-
-          <article class="metric-card">
-            <div class="metric-card__icon metric-card__icon--teal" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <p class="metric-card__label">Active users</p>
-            <p class="metric-card__value" data-target="8642">0</p>
-            <p class="metric-card__trend metric-card__trend--up">
-              <span class="trend-arrow" aria-hidden="true"></span> 6.1% vs last month
-            </p>
-          </article>
-
-          <article class="metric-card">
-            <div class="metric-card__icon metric-card__icon--coral" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            </div>
-            <p class="metric-card__label">New orders</p>
-            <p class="metric-card__value" data-target="356">0</p>
-            <p class="metric-card__trend metric-card__trend--down">
-              <span class="trend-arrow" aria-hidden="true"></span> 2.3% vs last month
-            </p>
-          </article>
-
-          <article class="metric-card">
-            <div class="metric-card__icon metric-card__icon--navy" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-            </div>
-            <p class="metric-card__label">Conversion rate</p>
-            <p class="metric-card__value" data-target="4.8" data-decimals="1" data-suffix="%">0%</p>
-            <p class="metric-card__trend metric-card__trend--up">
-              <span class="trend-arrow" aria-hidden="true"></span> 0.6% vs last month
-            </p>
-          </article>
+          <!-- Timeframe Selector Tabs -->
+          <div class="timeframe-tabs" role="tablist">
+            <button class="time-tab" data-period="24h">24h</button>
+            <button class="time-tab active" data-period="7d">7 Days</button>
+            <button class="time-tab" data-period="30d">30 Days</button>
+            <button class="time-tab" data-period="90d">90 Days</button>
+          </div>
         </section>
 
-        <!--
-          LOWER SECTION. A flex row on desktop (table gets more space, the
-          stats panel less), which wraps to a stacked column on narrow
-          screens automatically because of flex-wrap — again, no JS.
-        -->
-        <section class="panels">
-
-          <div class="panel panel--table">
-            <div class="panel__header">
-              <h2>Recent activity</h2>
-              <a href="#" class="panel__link">View all</a>
+        <!-- ====================================================================
+             METRIC CARDS GRID
+             CSS: grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))
+             Automatically distributes 4 cards across available viewport width.
+             ==================================================================== -->
+        <section class="metrics-grid" aria-label="Key Performance Indicators">
+          
+          <!-- Card 1: Total Revenue -->
+          <div class="metric-card" data-card="revenue">
+            <div class="metric-card-top">
+              <span class="metric-title">Monthly Run-Rate</span>
+              <div class="metric-icon-wrap icon-emerald">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
             </div>
-            <div class="table-scroll">
-              <table>
-                <caption class="sr-only">Recent customer activity</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">User</th>
-                    <th scope="col">Action</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Ananya Sharma</td>
-                    <td>Upgraded to Pro plan</td>
-                    <td><span class="status-pill status-pill--success">Completed</span></td>
-                    <td>2 hours ago</td>
-                  </tr>
-                  <tr>
-                    <td>Rohan Mehta</td>
-                    <td>Submitted refund request</td>
-                    <td><span class="status-pill status-pill--warning">Pending</span></td>
-                    <td>5 hours ago</td>
-                  </tr>
-                  <tr>
-                    <td>Priya Nair</td>
-                    <td>Placed order #4821</td>
-                    <td><span class="status-pill status-pill--success">Completed</span></td>
-                    <td>Yesterday</td>
-                  </tr>
-                  <tr>
-                    <td>Devansh Rao</td>
-                    <td>Payment declined</td>
-                    <td><span class="status-pill status-pill--danger">Failed</span></td>
-                    <td>Yesterday</td>
-                  </tr>
-                  <tr>
-                    <td>Meera Iyer</td>
-                    <td>Created new account</td>
-                    <td><span class="status-pill status-pill--success">Completed</span></td>
-                    <td>2 days ago</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="metric-card-body">
+              <div class="metric-number-wrap">
+                <span class="metric-prefix">$</span>
+                <span class="metric-value counter-value" data-target="148290" data-format="currency">148,290</span>
+              </div>
+              <div class="metric-trend trend-positive">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+14.2%</span>
+                <span class="trend-sub">vs last month</span>
+              </div>
+            </div>
+            <!-- Mini SVG Sparkline -->
+            <div class="metric-sparkline">
+              <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                <path d="M0,18 Q15,12 30,16 T60,8 T90,4 L100,2" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
             </div>
           </div>
 
-          <div class="panel panel--stats">
-            <div class="panel__header">
-              <h2>Top products</h2>
+          <!-- Card 2: Active Users -->
+          <div class="metric-card" data-card="sessions">
+            <div class="metric-card-top">
+              <span class="metric-title">Active Edge Sessions</span>
+              <div class="metric-icon-wrap icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
             </div>
-            <!--
-              These "bars" are just <div> width percentages set with inline
-              style, animated in CSS with a transition. No charting library
-              needed for something this simple.
-            -->
-            <ul class="bar-list">
-              <!--
-                Notice there's no inline "width" here anymore — just
-                data-width. script.js reads that number and applies the
-                real width itself a moment after the page loads, which is
-                what lets the CSS transition animate the bar filling in
-                (a width that's correct from the very first paint has
-                nothing to visually transition FROM).
-              -->
-              <li class="bar-item">
-                <div class="bar-item__row">
-                  <span>Wireless earbuds</span>
-                  <span>82%</span>
+            <div class="metric-card-body">
+              <div class="metric-number-wrap">
+                <span class="metric-value counter-value" data-target="28429" data-format="integer">28,429</span>
+              </div>
+              <div class="metric-trend trend-positive">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 18 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+8.1%</span>
+                <span class="trend-sub">real-time peak</span>
+              </div>
+            </div>
+            <div class="metric-sparkline">
+              <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                <path d="M0,20 Q20,15 40,9 T70,14 T100,5" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 3: Server Latency -->
+          <div class="metric-card" data-card="latency">
+            <div class="metric-card-top">
+              <span class="metric-title">Avg API Latency</span>
+              <div class="metric-icon-wrap icon-cyan">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-card-body">
+              <div class="metric-number-wrap">
+                <span class="metric-value counter-value" data-target="42" data-format="integer">42</span>
+                <span class="metric-unit">ms</span>
+              </div>
+              <div class="metric-trend trend-positive">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                  <polyline points="17 18 23 18 23 12"></polyline>
+                </svg>
+                <span>-12ms</span>
+                <span class="trend-sub">99.98% SLA</span>
+              </div>
+            </div>
+            <div class="metric-sparkline">
+              <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                <path d="M0,10 Q25,8 50,14 T80,11 T100,6" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 4: Conversion Rate -->
+          <div class="metric-card" data-card="conversion">
+            <div class="metric-card-top">
+              <span class="metric-title">Checkout Conversion</span>
+              <div class="metric-icon-wrap icon-violet">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-card-body">
+              <div class="metric-number-wrap">
+                <span class="metric-value counter-value" data-target="4.85" data-format="decimal">4.85</span>
+                <span class="metric-unit">%</span>
+              </div>
+              <div class="metric-trend trend-positive">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+0.6%</span>
+                <span class="trend-sub">optimized checkout</span>
+              </div>
+            </div>
+            <div class="metric-sparkline">
+              <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                <path d="M0,16 Q20,18 45,10 T80,12 T100,4" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ====================================================================
+             ANALYTICS & SYSTEM HEALTH SECTION
+             Two-column split: Pure responsive SVG Area Chart + Node Status
+             ==================================================================== -->
+        <section class="visuals-grid">
+          
+          <!-- Chart Panel (Zero JS chart library - 100% responsive SVG) -->
+          <div class="panel-card chart-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h2 class="panel-title">Throughput & Request Volume</h2>
+                <span class="panel-subtitle">Real-time HTTP requests dispatched across edge nodes</span>
+              </div>
+              
+              <!-- Quick Chart Toggles -->
+              <div class="chart-legend">
+                <span class="legend-item"><span class="legend-dot dot-indigo"></span> Requests/sec</span>
+                <span class="legend-item"><span class="legend-dot dot-emerald"></span> Cache Hits (92%)</span>
+              </div>
+            </div>
+
+            <!-- Responsive SVG Area/Line Chart -->
+            <div class="chart-container" id="chart-container">
+              <svg class="pure-svg-chart" viewBox="0 0 640 220" preserveAspectRatio="none">
+                <defs>
+                  <!-- Gradient fill for Indigo Area -->
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0"/>
+                  </linearGradient>
+                  <!-- Gradient fill for Emerald Area -->
+                  <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+
+                <!-- Horizontal Reference Grid Lines -->
+                <line x1="0" y1="40" x2="640" y2="40" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+                <line x1="0" y1="90" x2="640" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+                <line x1="0" y1="140" x2="640" y2="140" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+                <line x1="0" y1="190" x2="640" y2="190" stroke="rgba(255,255,255,0.08)"/>
+
+                <!-- Area fill: Cache Hits -->
+                <path d="M0,170 C80,150 140,110 220,130 C300,150 380,80 460,95 C540,110 590,60 640,50 L640,190 L0,190 Z" fill="url(#emeraldGradient)"/>
+                <!-- Line: Cache Hits -->
+                <path d="M0,170 C80,150 140,110 220,130 C300,150 380,80 460,95 C540,110 590,60 640,50" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+
+                <!-- Area fill: Total Throughput -->
+                <path d="M0,140 C80,110 140,70 220,95 C300,120 380,45 460,60 C540,75 590,30 640,20 L640,190 L0,190 Z" fill="url(#chartGradient)"/>
+                <!-- Line: Total Throughput -->
+                <path d="M0,140 C80,110 140,70 220,95 C300,120 380,45 460,60 C540,75 590,30 640,20" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+
+                <!-- Interactive Data Hotspots with subtle hover glow -->
+                <circle cx="220" cy="95" r="4.5" fill="#6366f1" stroke="#0b0f19" stroke-width="2" class="chart-point" data-info="14:00 • 34.2k req/s"/>
+                <circle cx="460" cy="60" r="4.5" fill="#6366f1" stroke="#0b0f19" stroke-width="2" class="chart-point" data-info="18:00 • 51.8k req/s"/>
+                <circle cx="640" cy="20" r="4.5" fill="#6366f1" stroke="#0b0f19" stroke-width="2" class="chart-point" data-info="Now • 68.4k req/s"/>
+              </svg>
+
+              <!-- Chart X-Axis Labels -->
+              <div class="chart-x-labels">
+                <span>00:00</span>
+                <span>04:00</span>
+                <span>08:00</span>
+                <span>12:00</span>
+                <span>16:00</span>
+                <span>20:00</span>
+                <span>Current</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Health / Node Gauges -->
+          <div class="panel-card health-panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Node Telemetry</h2>
+              <span class="badge badge-emerald">Optimal</span>
+            </div>
+
+            <div class="telemetry-list">
+              
+              <!-- Meter 1: CPU -->
+              <div class="telemetry-item">
+                <div class="telemetry-meta">
+                  <span class="telemetry-label">Cluster CPU Load</span>
+                  <span class="telemetry-value" id="cpu-stat">24.6%</span>
                 </div>
-                <div class="bar-track"><div class="bar-fill" data-width="82"></div></div>
-              </li>
-              <li class="bar-item">
-                <div class="bar-item__row">
-                  <span>Smart watch</span>
-                  <span>67%</span>
+                <div class="progress-track">
+                  <div class="progress-fill fill-emerald" style="width: 24.6%;"></div>
                 </div>
-                <div class="bar-track"><div class="bar-fill" data-width="67"></div></div>
-              </li>
-              <li class="bar-item">
-                <div class="bar-item__row">
-                  <span>Desk lamp</span>
-                  <span>54%</span>
+              </div>
+
+              <!-- Meter 2: RAM -->
+              <div class="telemetry-item">
+                <div class="telemetry-meta">
+                  <span class="telemetry-label">Memory Allocation</span>
+                  <span class="telemetry-value" id="ram-stat">61.2%</span>
                 </div>
-                <div class="bar-track"><div class="bar-fill" data-width="54"></div></div>
-              </li>
-              <li class="bar-item">
-                <div class="bar-item__row">
-                  <span>Canvas backpack</span>
-                  <span>41%</span>
+                <div class="progress-track">
+                  <div class="progress-fill fill-indigo" style="width: 61.2%;"></div>
                 </div>
-                <div class="bar-track"><div class="bar-fill" data-width="41"></div></div>
-              </li>
-            </ul>
+              </div>
+
+              <!-- Meter 3: Disk I/O -->
+              <div class="telemetry-item">
+                <div class="telemetry-meta">
+                  <span class="telemetry-label">NVMe Storage I/O</span>
+                  <span class="telemetry-value" id="disk-stat">38.4%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-cyan" style="width: 38.4%;"></div>
+                </div>
+              </div>
+
+              <!-- Meter 4: Bandwidth -->
+              <div class="telemetry-item">
+                <div class="telemetry-meta">
+                  <span class="telemetry-label">Edge Pipe Bandwidth</span>
+                  <span class="telemetry-value" id="bandwidth-stat">1.48 Gbps</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-violet" style="width: 74%;"></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Quick Action Buttons inside panel -->
+            <div class="health-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-purge-cache">Purge Cache</button>
+              <button class="btn btn-secondary btn-sm" id="btn-run-diagnostics">Run Healthcheck</button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ====================================================================
+             RECENT ACTIVITY & TRANSACTIONS TABLE
+             Features live filtering (All, Success, Pending, Failed) & table search
+             ==================================================================== -->
+        <section class="panel-card table-panel">
+          <div class="table-header-bar">
+            <div>
+              <h2 class="panel-title">Recent Pipeline Deployments & Operations</h2>
+              <span class="panel-subtitle">Real-time trace logs from production cluster</span>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="table-filter-group">
+              <div class="filter-pills" role="tablist">
+                <button class="filter-pill active" data-filter="all">All (5)</button>
+                <button class="filter-pill" data-filter="success">Success</button>
+                <button class="filter-pill" data-filter="pending">Pending</button>
+                <button class="filter-pill" data-filter="failed">Failed</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Responsive Table Container with Horizontal Scroll fallback -->
+          <div class="table-responsive">
+            <table class="data-table" id="activity-table">
+              <thead>
+                <tr>
+                  <th>Target Resource</th>
+                  <th>Type</th>
+                  <th>Initiator</th>
+                  <th>Status</th>
+                  <th>Duration</th>
+                  <th>Timestamp</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+                <!-- Row 1: Success -->
+                <tr data-status="success">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-emerald">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">auth-service:v2.4.1</div>
+                        <div class="resource-id">commit #c81bf9a</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-tag">Rolling Deploy</span></td>
+                  <td><span class="initiator-badge">tanmay</span></td>
+                  <td><span class="status-pill status-success"><span class="dot"></span>Success</span></td>
+                  <td><span class="mono-text">44s</span></td>
+                  <td><span class="sub-text">12 mins ago</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" title="View Details" onclick="viewLog('c81bf9a')">Details</button>
+                  </td>
+                </tr>
+
+                <!-- Row 2: Success -->
+                <tr data-status="success">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-emerald">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">payment-gateway:v1.9</div>
+                        <div class="resource-id">commit #fa024e1</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-tag">Stripe Sync</span></td>
+                  <td><span class="initiator-badge">system:cron</span></td>
+                  <td><span class="status-pill status-success"><span class="dot"></span>Success</span></td>
+                  <td><span class="mono-text">1m 12s</span></td>
+                  <td><span class="sub-text">38 mins ago</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" title="View Details" onclick="viewLog('fa024e1')">Details</button>
+                  </td>
+                </tr>
+
+                <!-- Row 3: Pending -->
+                <tr data-status="pending">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-amber">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">postgres-read-replica</div>
+                        <div class="resource-id">snapshot #db-9921</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-tag">DB Backup</span></td>
+                  <td><span class="initiator-badge">system:auto</span></td>
+                  <td><span class="status-pill status-pending"><span class="dot animate-pulse"></span>In Progress</span></td>
+                  <td><span class="mono-text">2m 45s</span></td>
+                  <td><span class="sub-text">Just now</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" title="View Details" onclick="viewLog('db-9921')">Details</button>
+                  </td>
+                </tr>
+
+                <!-- Row 4: Failed -->
+                <tr data-status="failed">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-red">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">ml-vector-indexer</div>
+                        <div class="resource-id">worker-gpu-03</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-tag">Batch Job</span></td>
+                  <td><span class="initiator-badge">alex.dev</span></td>
+                  <td><span class="status-pill status-failed"><span class="dot"></span>OOM Error</span></td>
+                  <td><span class="mono-text">14s</span></td>
+                  <td><span class="sub-text">2 hours ago</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn btn-retry" title="Retry Job" onclick="retryJob('worker-gpu-03')">Retry</button>
+                  </td>
+                </tr>
+
+                <!-- Row 5: Success -->
+                <tr data-status="success">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-emerald">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">edge-cdn-purge-all</div>
+                        <div class="resource-id">zone: global</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-tag">Cache Invalidation</span></td>
+                  <td><span class="initiator-badge">tanmay</span></td>
+                  <td><span class="status-pill status-success"><span class="dot"></span>Success</span></td>
+                  <td><span class="mono-text">3s</span></td>
+                  <td><span class="sub-text">4 hours ago</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" title="View Details" onclick="viewLog('edge-cdn')">Details</button>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty state indicator if search filters match nothing -->
+          <div id="table-empty-state" class="table-empty-state hidden">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <p>No matching operations found for your query.</p>
           </div>
         </section>
+
       </main>
+
+      <!-- Dashboard Footer -->
+      <footer class="app-footer">
+        <div class="footer-left">
+          <span>&copy; 2026 <strong>friday-framework</strong>. Built with 100% Vanilla HTML, CSS & JS.</span>
+        </div>
+        <div class="footer-right">
+          <span class="footer-pill"><span class="dot-live"></span> System Status: 100% Operational</span>
+        </div>
+      </footer>
+
     </div>
   </div>
 
-  <!-- Script goes just before </body> so the HTML above is already parsed
-       and ready to grab with document.querySelector by the time JS runs -->
-  <script src="script.js"></script>
+  <!-- ==========================================================================
+       NATIVE HTML5 <dialog> MODAL: NEW DEPLOYMENT
+       Modern browsers support <dialog> natively with .showModal() and .close().
+       Zero external modal libraries or jQuery required!
+       ========================================================================== -->
+  <dialog id="deploy-modal" class="modal-dialog">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 class="modal-title">Deploy New Pipeline</h3>
+          <p class="modal-subtitle">Trigger rolling update across edge clusters</p>
+        </div>
+        <button id="close-modal-btn" class="modal-close-btn" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="deploy-form" method="dialog" class="modal-body">
+        <div class="form-group">
+          <label for="deploy-service" class="form-label">Target Service</label>
+          <select id="deploy-service" class="form-select" required>
+            <option value="auth-service">auth-service (Current: v2.4.1)</option>
+            <option value="billing-api">billing-api (Current: v1.9.0)</option>
+            <option value="notification-hub">notification-hub (Current: v3.1.2)</option>
+            <option value="edge-router">edge-router (Current: v4.0.0)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deploy-env" class="form-label">Target Cluster Environment</label>
+          <select id="deploy-env" class="form-select" required>
+            <option value="production">Production (Global Multi-Region)</option>
+            <option value="staging">Staging (us-west-1)</option>
+            <option value="canary">Canary (5% Traffic Pool)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deploy-notes" class="form-label">Deployment Notes / Changelog</label>
+          <input type="text" id="deploy-notes" class="form-input" placeholder="e.g. Patch auth race condition & latency fixes" required>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-deploy-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="confirm-deploy-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Launch Deployment</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Vanilla JavaScript Controller -->
+  <script src="app.js"></script>
 </body>
 </html>
