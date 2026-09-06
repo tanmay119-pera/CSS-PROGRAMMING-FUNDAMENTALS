@@ -22,8 +22,11 @@
        ========================================================================== -->
   <div id="top-loader" class="top-loader" aria-hidden="true"></div>
 
-  <!-- Toast Notification Container (Fixed floating notices) -->
+  <!-- Toast Notification Container (Fixed floating notices in bottom-right) -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Overlay backdrop for mobile navigation (Placed outside .app-layout to prevent CSS Grid bugs!) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- Main Application Wrapper: Pure CSS Grid layout (Sidebar + Main Viewport) -->
   <div class="app-layout" id="app-layout">
@@ -62,16 +65,14 @@
         <div class="nav-section-label">MAIN MENU</div>
         
         <ul class="nav-list">
-          <!-- Active Nav Item -->
           <li class="nav-item active">
-            <a href="#" class="nav-link" data-route="dashboard">
+            <a href="#" class="nav-link" data-route="database">
               <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
               </svg>
-              <span class="nav-label">Dashboard</span>
+              <span class="nav-label">Database Nodes</span>
               <span class="nav-indicator"></span>
             </a>
           </li>
@@ -123,7 +124,7 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              <span class="nav-label">Team & Access</span>
+              <span class="nav-label">Engineers & Team</span>
             </a>
           </li>
 
@@ -143,13 +144,12 @@
       <div class="sidebar-footer">
         <div class="user-card" id="user-profile-card">
           <div class="user-avatar-container">
-            <!-- Sleek initials avatar with active pulse dot -->
             <div class="user-avatar">T</div>
             <span class="status-dot status-online" title="Status: Online"></span>
           </div>
           <div class="user-info">
-            <span class="user-name">tanmay</span>
-            <span class="user-role">Super Admin</span>
+            <span class="user-name">Tanmay</span>
+            <span class="user-role">Super Admin (India)</span>
           </div>
           <button class="user-action-btn" title="Quick Profile Menu" id="user-menu-btn" aria-label="User Options">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -162,11 +162,8 @@
       </div>
     </aside>
 
-    <!-- Overlay backdrop for mobile when sidebar is open -->
-    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-
     <!-- ========================================================================
-         MAIN CONTENT AREA (Top Nav Bar + Dashboard Grid)
+         MAIN CONTENT AREA (Top Nav Bar + Dashboard Grid + Scrollable Database)
          ======================================================================== -->
     <div class="main-wrapper">
 
@@ -186,18 +183,18 @@
           <nav class="breadcrumbs" aria-label="Breadcrumb">
             <span class="breadcrumb-item">friday-framework</span>
             <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-item active" id="current-page-crumb">Production Overview</span>
+            <span class="breadcrumb-item active" id="current-page-crumb">Database Cluster Matrix</span>
           </nav>
         </div>
 
-        <!-- Center Search Bar (Real-time filter for table & commands) -->
+        <!-- Center Search Bar (Real-time live search for database nodes) -->
         <div class="top-nav-center">
           <div class="search-box">
             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="global-search-input" placeholder="Search servers, deployments, logs..." autocomplete="off">
+            <input type="text" id="global-search-input" placeholder="Search nodes, engineers (e.g. Aarav, Priya), regions..." autocomplete="off">
             <kbd class="shortcut-key">⌘K</kbd>
           </div>
         </div>
@@ -206,20 +203,20 @@
         <div class="top-nav-right">
           
           <!-- Sync / Refresh Metrics Button (Working micro-interaction) -->
-          <button id="refresh-metrics-btn" class="btn btn-secondary btn-icon-text" title="Sync live metrics">
+          <button id="refresh-metrics-btn" class="btn btn-secondary btn-icon-text" title="Sync live database telemetry">
             <svg class="spin-target" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
             </svg>
             <span>Sync</span>
           </button>
 
-          <!-- Quick Action: Open New Deployment Modal -->
+          <!-- Quick Action: Provision Node Modal -->
           <button id="open-deploy-modal-btn" class="btn btn-primary btn-icon-text">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
-            <span>New Deploy</span>
+            <span>New Node</span>
           </button>
 
           <!-- Notification Bell with Ping Dot -->
@@ -235,28 +232,28 @@
             <!-- Notifications Dropdown Popover -->
             <div class="notifications-dropdown" id="notifications-dropdown">
               <div class="notif-header">
-                <span class="notif-title">Notifications</span>
+                <span class="notif-title">Cluster Notifications</span>
                 <button class="notif-clear-btn" id="mark-read-btn">Mark all read</button>
               </div>
               <ul class="notif-list">
                 <li class="notif-item unread">
                   <div class="notif-icon notif-icon-emerald">✓</div>
                   <div class="notif-content">
-                    <p class="notif-msg">Cluster us-east-2 scaled smoothly to 14 nodes.</p>
+                    <p class="notif-msg">Aarav Sharma synced Mumbai replica shard #04.</p>
                     <span class="notif-time">2 mins ago</span>
                   </div>
                 </li>
                 <li class="notif-item unread">
                   <div class="notif-icon notif-icon-blue">🚀</div>
                   <div class="notif-content">
-                    <p class="notif-msg">Deployment #8491 succeeded with 0 errors.</p>
+                    <p class="notif-msg">Priya Patel added Redis cache layer in Bengaluru.</p>
                     <span class="notif-time">14 mins ago</span>
                   </div>
                 </li>
                 <li class="notif-item">
                   <div class="notif-icon notif-icon-amber">⚡</div>
                   <div class="notif-content">
-                    <p class="notif-msg">High traffic burst handled by Cloudflare Edge.</p>
+                    <p class="notif-msg">Rohan Gupta ran auto-failover test on Delhi node.</p>
                     <span class="notif-time">1 hour ago</span>
                   </div>
                 </li>
@@ -267,7 +264,7 @@
           <!-- Quick User Avatar in Header -->
           <div class="header-profile" id="header-profile-trigger">
             <div class="user-avatar-sm">T</div>
-            <span class="header-username">tanmay</span>
+            <span class="header-username">Tanmay</span>
           </div>
 
         </div>
@@ -282,16 +279,16 @@
         <!-- Welcome Banner & Controls Header -->
         <section class="welcome-section">
           <div class="welcome-copy">
-            <h1 class="welcome-title">Welcome back, <span class="highlight-text">Tanmay</span> 👋</h1>
-            <p class="welcome-subtitle">All 8 microservices operational across 3 edge locations. Zero framework overhead.</p>
+            <h1 class="welcome-title">Welcome back, <span class="highlight-text">Tanmay</span> 🇮🇳</h1>
+            <p class="welcome-subtitle">Managed Database Infrastructure: 24 active shards connected across Mumbai, Bengaluru, Hyderabad, and Delhi.</p>
           </div>
 
-          <!-- Timeframe Selector Tabs -->
+          <!-- Quick Region Selector Tabs -->
           <div class="timeframe-tabs" role="tablist">
-            <button class="time-tab" data-period="24h">24h</button>
-            <button class="time-tab active" data-period="7d">7 Days</button>
-            <button class="time-tab" data-period="30d">30 Days</button>
-            <button class="time-tab" data-period="90d">90 Days</button>
+            <button class="time-tab active" data-period="all">All Regions</button>
+            <button class="time-tab" data-period="mumbai">Mumbai</button>
+            <button class="time-tab" data-period="blr">Bengaluru</button>
+            <button class="time-tab" data-period="delhi">Delhi</button>
           </div>
         </section>
 
@@ -300,34 +297,33 @@
              CSS: grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))
              Automatically distributes 4 cards across available viewport width.
              ==================================================================== -->
-        <section class="metrics-grid" aria-label="Key Performance Indicators">
+        <section class="metrics-grid" aria-label="Database Telemetry">
           
-          <!-- Card 1: Total Revenue -->
+          <!-- Card 1: Total Records -->
           <div class="metric-card" data-card="revenue">
             <div class="metric-card-top">
-              <span class="metric-title">Monthly Run-Rate</span>
+              <span class="metric-title">Total Database Records</span>
               <div class="metric-icon-wrap icon-emerald">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="12" y1="1" x2="12" y2="23"></line>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
                 </svg>
               </div>
             </div>
             <div class="metric-card-body">
               <div class="metric-number-wrap">
-                <span class="metric-prefix">$</span>
-                <span class="metric-value counter-value" data-target="148290" data-format="currency">148,290</span>
+                <span class="metric-value counter-value" data-target="14298420" data-format="integer">14,298,420</span>
               </div>
               <div class="metric-trend trend-positive">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                   <polyline points="17 6 23 6 23 12"></polyline>
                 </svg>
-                <span>+14.2%</span>
-                <span class="trend-sub">vs last month</span>
+                <span>+182,490</span>
+                <span class="trend-sub">today</span>
               </div>
             </div>
-            <!-- Mini SVG Sparkline -->
             <div class="metric-sparkline">
               <svg viewBox="0 0 100 24" preserveAspectRatio="none">
                 <path d="M0,18 Q15,12 30,16 T60,8 T90,4 L100,2" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
@@ -335,30 +331,31 @@
             </div>
           </div>
 
-          <!-- Card 2: Active Users -->
+          <!-- Card 2: Active Nodes -->
           <div class="metric-card" data-card="sessions">
             <div class="metric-card-top">
-              <span class="metric-title">Active Edge Sessions</span>
+              <span class="metric-title">Connected Shards</span>
               <div class="metric-icon-wrap icon-blue">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
                 </svg>
               </div>
             </div>
             <div class="metric-card-body">
               <div class="metric-number-wrap">
-                <span class="metric-value counter-value" data-target="28429" data-format="integer">28,429</span>
+                <span class="metric-value counter-value" data-target="24" data-format="integer">24</span>
+                <span class="metric-unit">Nodes</span>
               </div>
               <div class="metric-trend trend-positive">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 18 18"></polyline>
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                   <polyline points="17 6 23 6 23 12"></polyline>
                 </svg>
-                <span>+8.1%</span>
-                <span class="trend-sub">real-time peak</span>
+                <span>100% Up</span>
+                <span class="trend-sub">0 outages</span>
               </div>
             </div>
             <div class="metric-sparkline">
@@ -368,10 +365,10 @@
             </div>
           </div>
 
-          <!-- Card 3: Server Latency -->
+          <!-- Card 3: Query Latency -->
           <div class="metric-card" data-card="latency">
             <div class="metric-card-top">
-              <span class="metric-title">Avg API Latency</span>
+              <span class="metric-title">Avg Query Latency</span>
               <div class="metric-icon-wrap icon-cyan">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -381,7 +378,7 @@
             </div>
             <div class="metric-card-body">
               <div class="metric-number-wrap">
-                <span class="metric-value counter-value" data-target="42" data-format="integer">42</span>
+                <span class="metric-value counter-value" data-target="3.8" data-format="decimal">3.8</span>
                 <span class="metric-unit">ms</span>
               </div>
               <div class="metric-trend trend-positive">
@@ -389,8 +386,8 @@
                   <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
                   <polyline points="17 18 23 18 23 12"></polyline>
                 </svg>
-                <span>-12ms</span>
-                <span class="trend-sub">99.98% SLA</span>
+                <span>-1.2ms</span>
+                <span class="trend-sub">sub-ms peak</span>
               </div>
             </div>
             <div class="metric-sparkline">
@@ -400,29 +397,28 @@
             </div>
           </div>
 
-          <!-- Card 4: Conversion Rate -->
+          <!-- Card 4: Throughput QPS -->
           <div class="metric-card" data-card="conversion">
             <div class="metric-card-top">
-              <span class="metric-title">Checkout Conversion</span>
+              <span class="metric-title">Peak Read/Write QPS</span>
               <div class="metric-icon-wrap icon-violet">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
               </div>
             </div>
             <div class="metric-card-body">
               <div class="metric-number-wrap">
-                <span class="metric-value counter-value" data-target="4.85" data-format="decimal">4.85</span>
-                <span class="metric-unit">%</span>
+                <span class="metric-value counter-value" data-target="92450" data-format="integer">92,450</span>
+                <span class="metric-unit">QPS</span>
               </div>
               <div class="metric-trend trend-positive">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                   <polyline points="17 6 23 6 23 12"></polyline>
                 </svg>
-                <span>+0.6%</span>
-                <span class="trend-sub">optimized checkout</span>
+                <span>+12.4%</span>
+                <span class="trend-sub">SSD NVMe pool</span>
               </div>
             </div>
             <div class="metric-sparkline">
@@ -435,290 +431,453 @@
         </section>
 
         <!-- ====================================================================
-             ANALYTICS & SYSTEM HEALTH SECTION
-             Two-column split: Pure responsive SVG Area Chart + Node Status
+             LIVE DATABASE SCROLLABLE DATA GRID (MODERN & MOTION-PACKED)
+             Featuring realistic Indian engineers, sticky glass headers, smooth
+             overflow scrolling, glowing states, and action triggers.
              ==================================================================== -->
-        <section class="visuals-grid">
-          
-          <!-- Chart Panel (Zero JS chart library - 100% responsive SVG) -->
-          <div class="panel-card chart-panel">
-            <div class="panel-header">
-              <div class="panel-title-group">
-                <h2 class="panel-title">Throughput & Request Volume</h2>
-                <span class="panel-subtitle">Real-time HTTP requests dispatched across edge nodes</span>
-              </div>
-              
-              <!-- Quick Chart Toggles -->
-              <div class="chart-legend">
-                <span class="legend-item"><span class="legend-dot dot-indigo"></span> Requests/sec</span>
-                <span class="legend-item"><span class="legend-dot dot-emerald"></span> Cache Hits (92%)</span>
-              </div>
-            </div>
-
-            <!-- Responsive SVG Area/Line Chart -->
-            <div class="chart-container" id="chart-container">
-              <svg class="pure-svg-chart" viewBox="0 0 640 220" preserveAspectRatio="none">
-                <defs>
-                  <!-- Gradient fill for Indigo Area -->
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0"/>
-                  </linearGradient>
-                  <!-- Gradient fill for Emerald Area -->
-                  <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
-                  </linearGradient>
-                </defs>
-
-                <!-- Horizontal Reference Grid Lines -->
-                <line x1="0" y1="40" x2="640" y2="40" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
-                <line x1="0" y1="90" x2="640" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
-                <line x1="0" y1="140" x2="640" y2="140" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
-                <line x1="0" y1="190" x2="640" y2="190" stroke="rgba(255,255,255,0.08)"/>
-
-                <!-- Area fill: Cache Hits -->
-                <path d="M0,170 C80,150 140,110 220,130 C300,150 380,80 460,95 C540,110 590,60 640,50 L640,190 L0,190 Z" fill="url(#emeraldGradient)"/>
-                <!-- Line: Cache Hits -->
-                <path d="M0,170 C80,150 140,110 220,130 C300,150 380,80 460,95 C540,110 590,60 640,50" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
-
-                <!-- Area fill: Total Throughput -->
-                <path d="M0,140 C80,110 140,70 220,95 C300,120 380,45 460,60 C540,75 590,30 640,20 L640,190 L0,190 Z" fill="url(#chartGradient)"/>
-                <!-- Line: Total Throughput -->
-                <path d="M0,140 C80,110 140,70 220,95 C300,120 380,45 460,60 C540,75 590,30 640,20" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
-
-                <!-- Interactive Data Hotspots with subtle hover glow -->
-                <circle cx="220" cy="95" r="4.5" fill="#6366f1" stroke="#0b0f19" stroke-width="2" class="chart-point" data-info="14:00 • 34.2k req/s"/>
-                <circle cx="460" cy="60" r="4.5" fill="#6366f1" stroke="#0b0f19" stroke-width="2" class="chart-point" data-info="18:00 • 51.8k req/s"/>
-                <circle cx="640" cy="20" r="4.5" fill="#6366f1" stroke="#0b0f19" stroke-width="2" class="chart-point" data-info="Now • 68.4k req/s"/>
-              </svg>
-
-              <!-- Chart X-Axis Labels -->
-              <div class="chart-x-labels">
-                <span>00:00</span>
-                <span>04:00</span>
-                <span>08:00</span>
-                <span>12:00</span>
-                <span>16:00</span>
-                <span>20:00</span>
-                <span>Current</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- System Health / Node Gauges -->
-          <div class="panel-card health-panel">
-            <div class="panel-header">
-              <h2 class="panel-title">Node Telemetry</h2>
-              <span class="badge badge-emerald">Optimal</span>
-            </div>
-
-            <div class="telemetry-list">
-              
-              <!-- Meter 1: CPU -->
-              <div class="telemetry-item">
-                <div class="telemetry-meta">
-                  <span class="telemetry-label">Cluster CPU Load</span>
-                  <span class="telemetry-value" id="cpu-stat">24.6%</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill fill-emerald" style="width: 24.6%;"></div>
-                </div>
-              </div>
-
-              <!-- Meter 2: RAM -->
-              <div class="telemetry-item">
-                <div class="telemetry-meta">
-                  <span class="telemetry-label">Memory Allocation</span>
-                  <span class="telemetry-value" id="ram-stat">61.2%</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill fill-indigo" style="width: 61.2%;"></div>
-                </div>
-              </div>
-
-              <!-- Meter 3: Disk I/O -->
-              <div class="telemetry-item">
-                <div class="telemetry-meta">
-                  <span class="telemetry-label">NVMe Storage I/O</span>
-                  <span class="telemetry-value" id="disk-stat">38.4%</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill fill-cyan" style="width: 38.4%;"></div>
-                </div>
-              </div>
-
-              <!-- Meter 4: Bandwidth -->
-              <div class="telemetry-item">
-                <div class="telemetry-meta">
-                  <span class="telemetry-label">Edge Pipe Bandwidth</span>
-                  <span class="telemetry-value" id="bandwidth-stat">1.48 Gbps</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill fill-violet" style="width: 74%;"></div>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Quick Action Buttons inside panel -->
-            <div class="health-actions">
-              <button class="btn btn-secondary btn-sm" id="btn-purge-cache">Purge Cache</button>
-              <button class="btn btn-secondary btn-sm" id="btn-run-diagnostics">Run Healthcheck</button>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- ====================================================================
-             RECENT ACTIVITY & TRANSACTIONS TABLE
-             Features live filtering (All, Success, Pending, Failed) & table search
-             ==================================================================== -->
-        <section class="panel-card table-panel">
+        <section class="panel-card database-panel">
           <div class="table-header-bar">
             <div>
-              <h2 class="panel-title">Recent Pipeline Deployments & Operations</h2>
-              <span class="panel-subtitle">Real-time trace logs from production cluster</span>
+              <div class="database-title-badge">
+                <span class="pulse-indicator"></span>
+                <h2 class="panel-title">Production Database Shards & Replication Grid</h2>
+              </div>
+              <span class="panel-subtitle">Scrollable high-concurrency node matrix • Managed by Lead Admin Tanmay & Team</span>
             </div>
 
             <!-- Filter Controls -->
             <div class="table-filter-group">
               <div class="filter-pills" role="tablist">
-                <button class="filter-pill active" data-filter="all">All (5)</button>
-                <button class="filter-pill" data-filter="success">Success</button>
-                <button class="filter-pill" data-filter="pending">Pending</button>
-                <button class="filter-pill" data-filter="failed">Failed</button>
+                <button class="filter-pill active" data-filter="all">All Shards (12)</button>
+                <button class="filter-pill" data-filter="primary">Primary</button>
+                <button class="filter-pill" data-filter="replica">Replica</button>
+                <button class="filter-pill" data-filter="syncing">Syncing</button>
               </div>
             </div>
           </div>
 
-          <!-- Responsive Table Container with Horizontal Scroll fallback -->
-          <div class="table-responsive">
-            <table class="data-table" id="activity-table">
+          <!-- High-performance scrollable database wrapper with custom styling -->
+          <div class="database-scroll-container">
+            <table class="data-table database-table" id="activity-table">
               <thead>
                 <tr>
-                  <th>Target Resource</th>
-                  <th>Type</th>
-                  <th>Initiator</th>
+                  <th>Database Shard / Identifier</th>
+                  <th>Engine / Type</th>
+                  <th>Assigned Engineer</th>
+                  <th>Region & Datacenter</th>
                   <th>Status</th>
-                  <th>Duration</th>
-                  <th>Timestamp</th>
-                  <th class="text-right">Action</th>
+                  <th>Storage Used</th>
+                  <th>Latency</th>
+                  <th class="text-right">Quick Action</th>
                 </tr>
               </thead>
               <tbody id="table-body">
-                <!-- Row 1: Success -->
-                <tr data-status="success">
+                
+                <!-- Node 1: Mumbai Primary -->
+                <tr data-status="primary" class="db-row">
                   <td>
                     <div class="resource-cell">
                       <div class="resource-icon icon-emerald">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
                       </div>
                       <div>
-                        <div class="resource-name">auth-service:v2.4.1</div>
-                        <div class="resource-id">commit #c81bf9a</div>
+                        <div class="resource-name">pg_cluster_mumbai_01</div>
+                        <div class="resource-id">shard-id: #bom-pg-881</div>
                       </div>
                     </div>
                   </td>
-                  <td><span class="type-tag">Rolling Deploy</span></td>
-                  <td><span class="initiator-badge">tanmay</span></td>
-                  <td><span class="status-pill status-success"><span class="dot"></span>Success</span></td>
-                  <td><span class="mono-text">44s</span></td>
-                  <td><span class="sub-text">12 mins ago</span></td>
-                  <td class="text-right">
-                    <button class="table-action-btn" title="View Details" onclick="viewLog('c81bf9a')">Details</button>
-                  </td>
-                </tr>
-
-                <!-- Row 2: Success -->
-                <tr data-status="success">
+                  <td><span class="engine-badge engine-postgres">PostgreSQL 16</span></td>
                   <td>
-                    <div class="resource-cell">
-                      <div class="resource-icon icon-emerald">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      </div>
-                      <div>
-                        <div class="resource-name">payment-gateway:v1.9</div>
-                        <div class="resource-id">commit #fa024e1</div>
-                      </div>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-as">AS</span>
+                      <span class="engineer-name">Aarav Sharma</span>
                     </div>
                   </td>
-                  <td><span class="type-tag">Stripe Sync</span></td>
-                  <td><span class="initiator-badge">system:cron</span></td>
-                  <td><span class="status-pill status-success"><span class="dot"></span>Success</span></td>
-                  <td><span class="mono-text">1m 12s</span></td>
-                  <td><span class="sub-text">38 mins ago</span></td>
-                  <td class="text-right">
-                    <button class="table-action-btn" title="View Details" onclick="viewLog('fa024e1')">Details</button>
-                  </td>
-                </tr>
-
-                <!-- Row 3: Pending -->
-                <tr data-status="pending">
+                  <td><span class="region-pill">ap-south-1 (Mumbai)</span></td>
+                  <td><span class="status-pill status-success"><span class="dot animate-pulse"></span>Primary Active</span></td>
                   <td>
-                    <div class="resource-cell">
-                      <div class="resource-icon icon-amber">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                      </div>
-                      <div>
-                        <div class="resource-name">postgres-read-replica</div>
-                        <div class="resource-id">snapshot #db-9921</div>
-                      </div>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>1.2 TB / 2 TB</span><span>60%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-emerald" style="width: 60%;"></div></div>
                     </div>
                   </td>
-                  <td><span class="type-tag">DB Backup</span></td>
-                  <td><span class="initiator-badge">system:auto</span></td>
-                  <td><span class="status-pill status-pending"><span class="dot animate-pulse"></span>In Progress</span></td>
-                  <td><span class="mono-text">2m 45s</span></td>
-                  <td><span class="sub-text">Just now</span></td>
+                  <td><span class="mono-text latency-fast">2.1ms</span></td>
                   <td class="text-right">
-                    <button class="table-action-btn" title="View Details" onclick="viewLog('db-9921')">Details</button>
+                    <button class="table-action-btn btn-action-glow" onclick="queryNode('pg_cluster_mumbai_01')">Query</button>
                   </td>
                 </tr>
 
-                <!-- Row 4: Failed -->
-                <tr data-status="failed">
+                <!-- Node 2: Bengaluru Redis -->
+                <tr data-status="primary" class="db-row">
                   <td>
                     <div class="resource-cell">
                       <div class="resource-icon icon-red">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                       </div>
                       <div>
-                        <div class="resource-name">ml-vector-indexer</div>
-                        <div class="resource-id">worker-gpu-03</div>
+                        <div class="resource-name">redis_cache_blr_cluster</div>
+                        <div class="resource-id">shard-id: #blr-rd-410</div>
                       </div>
                     </div>
                   </td>
-                  <td><span class="type-tag">Batch Job</span></td>
-                  <td><span class="initiator-badge">alex.dev</span></td>
-                  <td><span class="status-pill status-failed"><span class="dot"></span>OOM Error</span></td>
-                  <td><span class="mono-text">14s</span></td>
-                  <td><span class="sub-text">2 hours ago</span></td>
+                  <td><span class="engine-badge engine-redis">Redis 7.2 Memory</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-pp">PP</span>
+                      <span class="engineer-name">Priya Patel</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">blr-dc-02 (Bengaluru)</span></td>
+                  <td><span class="status-pill status-success"><span class="dot animate-pulse"></span>In-Memory High Speed</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>184 GB / 256 GB</span><span>72%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-indigo" style="width: 72%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">0.7ms</span></td>
                   <td class="text-right">
-                    <button class="table-action-btn btn-retry" title="Retry Job" onclick="retryJob('worker-gpu-03')">Retry</button>
+                    <button class="table-action-btn btn-action-glow" onclick="queryNode('redis_cache_blr_cluster')">Flush/Sync</button>
                   </td>
                 </tr>
 
-                <!-- Row 5: Success -->
-                <tr data-status="success">
+                <!-- Node 3: Delhi Edge Shard -->
+                <tr data-status="replica" class="db-row">
                   <td>
                     <div class="resource-cell">
-                      <div class="resource-icon icon-emerald">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <div class="resource-icon icon-blue">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
                       </div>
                       <div>
-                        <div class="resource-name">edge-cdn-purge-all</div>
-                        <div class="resource-id">zone: global</div>
+                        <div class="resource-name">aurora_read_delhi_01</div>
+                        <div class="resource-id">shard-id: #del-au-109</div>
                       </div>
                     </div>
                   </td>
-                  <td><span class="type-tag">Cache Invalidation</span></td>
-                  <td><span class="initiator-badge">tanmay</span></td>
-                  <td><span class="status-pill status-success"><span class="dot"></span>Success</span></td>
-                  <td><span class="mono-text">3s</span></td>
-                  <td><span class="sub-text">4 hours ago</span></td>
+                  <td><span class="engine-badge engine-mysql">MySQL 8.4</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-rg">RG</span>
+                      <span class="engineer-name">Rohan Gupta</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">del-edge-01 (Delhi NCR)</span></td>
+                  <td><span class="status-pill status-replica"><span class="dot"></span>Replica (Synced)</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>890 GB / 2 TB</span><span>44%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-cyan" style="width: 44%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">3.4ms</span></td>
                   <td class="text-right">
-                    <button class="table-action-btn" title="View Details" onclick="viewLog('edge-cdn')">Details</button>
+                    <button class="table-action-btn" onclick="queryNode('aurora_read_delhi_01')">Metrics</button>
+                  </td>
+                </tr>
+
+                <!-- Node 4: Hyderabad Vector Search -->
+                <tr data-status="primary" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-violet">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">qdrant_vector_hyd</div>
+                        <div class="resource-id">shard-id: #hyd-qd-902</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-vector">Qdrant Vector DB</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-ai">AI</span>
+                      <span class="engineer-name">Ananya Iyer</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">ap-south-2 (Hyderabad)</span></td>
+                  <td><span class="status-pill status-success"><span class="dot animate-pulse"></span>Index Ready</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>450 GB / 1 TB</span><span>45%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-violet" style="width: 45%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">4.6ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn btn-action-glow" onclick="queryNode('qdrant_vector_hyd')">Search Test</button>
+                  </td>
+                </tr>
+
+                <!-- Node 5: Pune Replica Syncing -->
+                <tr data-status="syncing" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-amber">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">clickhouse_analytics_pune</div>
+                        <div class="resource-id">shard-id: #pnq-ch-331</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-clickhouse">ClickHouse OLAP</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-vm">VM</span>
+                      <span class="engineer-name">Vikram Malhotra</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">pnq-zone-a (Pune)</span></td>
+                  <td><span class="status-pill status-pending"><span class="dot animate-pulse"></span>WAL Syncing</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>3.4 TB / 5 TB</span><span>68%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-amber" style="width: 68%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-warn">14.8ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn btn-retry" onclick="syncShard('clickhouse_analytics_pune')">Force Sync</button>
+                  </td>
+                </tr>
+
+                <!-- Node 6: Chennai TimescaleDB -->
+                <tr data-status="replica" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-emerald">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">timescale_telemetry_maa</div>
+                        <div class="resource-id">shard-id: #maa-ts-552</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-postgres">TimescaleDB</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-nv">NV</span>
+                      <span class="engineer-name">Neha Verma</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">maa-dc-01 (Chennai)</span></td>
+                  <td><span class="status-pill status-replica"><span class="dot"></span>Replica (Synced)</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>1.8 TB / 4 TB</span><span>45%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-emerald" style="width: 45%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">3.1ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" onclick="queryNode('timescale_telemetry_maa')">Metrics</button>
+                  </td>
+                </tr>
+
+                <!-- Node 7: Kolkata Kafka Broker Storage -->
+                <tr data-status="primary" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-cyan">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">kafka_event_stream_ccu</div>
+                        <div class="resource-id">shard-id: #ccu-kf-771</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-kafka">Apache Kafka 3.6</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-av">AV</span>
+                      <span class="engineer-name">Aditya Verma</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">ccu-edge-02 (Kolkata)</span></td>
+                  <td><span class="status-pill status-success"><span class="dot animate-pulse"></span>0 Lag Messages</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>640 GB / 1 TB</span><span>64%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-cyan" style="width: 64%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">1.4ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn btn-action-glow" onclick="queryNode('kafka_event_stream_ccu')">Partitions</button>
+                  </td>
+                </tr>
+
+                <!-- Node 8: Ahmedabad Read Node -->
+                <tr data-status="replica" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-blue">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">pg_ro_ahmedabad_02</div>
+                        <div class="resource-id">shard-id: #amd-pg-129</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-postgres">PostgreSQL 16</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-kn">KN</span>
+                      <span class="engineer-name">Kavya Nair</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">amd-west-01 (Ahmedabad)</span></td>
+                  <td><span class="status-pill status-replica"><span class="dot"></span>Replica (Synced)</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>1.1 TB / 2 TB</span><span>55%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-indigo" style="width: 55%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">2.9ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" onclick="queryNode('pg_ro_ahmedabad_02')">Metrics</button>
+                  </td>
+                </tr>
+
+                <!-- Node 9: Jaipur Cold Archive Shard -->
+                <tr data-status="replica" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-violet">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">cold_archive_jaipur_01</div>
+                        <div class="resource-id">shard-id: #jpr-s3-990</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-clickhouse">Parquet / S3 Storage</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-ds">DS</span>
+                      <span class="engineer-name">Devendra Singh</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">jpr-vault-01 (Jaipur)</span></td>
+                  <td><span class="status-pill status-replica"><span class="dot"></span>Warm Archive</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>8.2 TB / 10 TB</span><span>82%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-violet" style="width: 82%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-warn">22.4ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" onclick="queryNode('cold_archive_jaipur_01')">Inspect</button>
+                  </td>
+                </tr>
+
+                <!-- Node 10: Mumbai Semantic Search -->
+                <tr data-status="primary" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-emerald">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">elastic_search_bom_02</div>
+                        <div class="resource-id">shard-id: #bom-es-401</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-vector">Elasticsearch 8.11</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-ij">IJ</span>
+                      <span class="engineer-name">Ishaan Joshi</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">ap-south-1 (Mumbai)</span></td>
+                  <td><span class="status-pill status-success"><span class="dot animate-pulse"></span>Cluster Green</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>1.5 TB / 3 TB</span><span>50%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-emerald" style="width: 50%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">4.0ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn btn-action-glow" onclick="queryNode('elastic_search_bom_02')">Indices</button>
+                  </td>
+                </tr>
+
+                <!-- Node 11: Bengaluru Disaster Recovery Target -->
+                <tr data-status="replica" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-blue">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">dr_standby_blr_vault</div>
+                        <div class="resource-id">shard-id: #blr-dr-119</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-postgres">PostgreSQL 16 Standby</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-pr">PR</span>
+                      <span class="engineer-name">Pooja Reddy</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">blr-dc-03 (Bengaluru)</span></td>
+                  <td><span class="status-pill status-replica"><span class="dot"></span>Hot Standby</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>1.2 TB / 2 TB</span><span>60%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-cyan" style="width: 60%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-fast">1.8ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn" onclick="queryNode('dr_standby_blr_vault')">Verify Checksum</button>
+                  </td>
+                </tr>
+
+                <!-- Node 12: Noida Syncing Target -->
+                <tr data-status="syncing" class="db-row">
+                  <td>
+                    <div class="resource-cell">
+                      <div class="resource-icon icon-amber">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="resource-name">scylla_distributed_noida</div>
+                        <div class="resource-id">shard-id: #noi-sc-801</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="engine-badge engine-redis">ScyllaDB NoSQL</span></td>
+                  <td>
+                    <div class="engineer-tag">
+                      <span class="engineer-avatar avatar-rk">RK</span>
+                      <span class="engineer-name">Rajesh Kumar</span>
+                    </div>
+                  </td>
+                  <td><span class="region-pill">del-noida-dc (Noida)</span></td>
+                  <td><span class="status-pill status-pending"><span class="dot animate-pulse"></span>Rebalancing</span></td>
+                  <td>
+                    <div class="table-storage-bar">
+                      <div class="storage-meta"><span>920 GB / 2 TB</span><span>46%</span></div>
+                      <div class="progress-track"><div class="progress-fill fill-amber" style="width: 46%;"></div></div>
+                    </div>
+                  </td>
+                  <td><span class="mono-text latency-warn">9.2ms</span></td>
+                  <td class="text-right">
+                    <button class="table-action-btn btn-retry" onclick="syncShard('scylla_distributed_noida')">Rebalance</button>
                   </td>
                 </tr>
 
@@ -732,7 +891,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <p>No matching operations found for your query.</p>
+            <p>No matching database shards found. Try searching for "Aarav", "Mumbai", or "PostgreSQL".</p>
           </div>
         </section>
 
@@ -741,10 +900,10 @@
       <!-- Dashboard Footer -->
       <footer class="app-footer">
         <div class="footer-left">
-          <span>&copy; 2026 <strong>friday-framework</strong>. Built with 100% Vanilla HTML, CSS & JS.</span>
+          <span>&copy; 2026 <strong>friday-framework</strong>. Developed for <strong>Tanmay</strong> & Engineering Core (India).</span>
         </div>
         <div class="footer-right">
-          <span class="footer-pill"><span class="dot-live"></span> System Status: 100% Operational</span>
+          <span class="footer-pill"><span class="dot-live"></span> Indian Datacenter Grid: 100% Operational (24/24 Shards Active)</span>
         </div>
       </footer>
 
@@ -752,16 +911,14 @@
   </div>
 
   <!-- ==========================================================================
-       NATIVE HTML5 <dialog> MODAL: NEW DEPLOYMENT
-       Modern browsers support <dialog> natively with .showModal() and .close().
-       Zero external modal libraries or jQuery required!
+       NATIVE HTML5 <dialog> MODAL: PROVISION NEW DATABASE SHARD
        ========================================================================== -->
   <dialog id="deploy-modal" class="modal-dialog">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title-group">
-          <h3 class="modal-title">Deploy New Pipeline</h3>
-          <p class="modal-subtitle">Trigger rolling update across edge clusters</p>
+          <h3 class="modal-title">Provision New Database Shard</h3>
+          <p class="modal-subtitle">Deploy a high-availability shard to Indian Datacenter Grid</p>
         </div>
         <button id="close-modal-btn" class="modal-close-btn" aria-label="Close dialog">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -773,41 +930,54 @@
 
       <form id="deploy-form" method="dialog" class="modal-body">
         <div class="form-group">
-          <label for="deploy-service" class="form-label">Target Service</label>
-          <select id="deploy-service" class="form-select" required>
-            <option value="auth-service">auth-service (Current: v2.4.1)</option>
-            <option value="billing-api">billing-api (Current: v1.9.0)</option>
-            <option value="notification-hub">notification-hub (Current: v3.1.2)</option>
-            <option value="edge-router">edge-router (Current: v4.0.0)</option>
+          <label for="deploy-service" class="form-label">Database Shard Identifier</label>
+          <input type="text" id="deploy-service" class="form-input" placeholder="e.g. pg_orders_mumbai_03" required>
+        </div>
+
+        <div class="form-group">
+          <label for="deploy-engine" class="form-label">Database Engine</label>
+          <select id="deploy-engine" class="form-select" required>
+            <option value="PostgreSQL 16">PostgreSQL 16 (ACID Relational)</option>
+            <option value="Redis 7.2">Redis 7.2 (Distributed Cache)</option>
+            <option value="Qdrant Vector">Qdrant (Vector AI Search)</option>
+            <option value="ClickHouse OLAP">ClickHouse (Real-Time Analytics)</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="deploy-env" class="form-label">Target Cluster Environment</label>
+          <label for="deploy-engineer" class="form-label">Assign Lead Engineer</label>
+          <select id="deploy-engineer" class="form-select" required>
+            <option value="Tanmay (Super Admin)">Tanmay (Super Admin)</option>
+            <option value="Aarav Sharma">Aarav Sharma (Mumbai DBA)</option>
+            <option value="Priya Patel">Priya Patel (Bengaluru Platform)</option>
+            <option value="Rohan Gupta">Rohan Gupta (Delhi Edge)</option>
+            <option value="Ananya Iyer">Ananya Iyer (Hyderabad Systems)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deploy-env" class="form-label">Target Indian Region</label>
           <select id="deploy-env" class="form-select" required>
-            <option value="production">Production (Global Multi-Region)</option>
-            <option value="staging">Staging (us-west-1)</option>
-            <option value="canary">Canary (5% Traffic Pool)</option>
+            <option value="ap-south-1 (Mumbai)">ap-south-1 (Mumbai Tier-4)</option>
+            <option value="blr-dc-02 (Bengaluru)">blr-dc-02 (Bengaluru High-Tech Park)</option>
+            <option value="del-edge-01 (Delhi NCR)">del-edge-01 (Delhi NCR)</option>
+            <option value="ap-south-2 (Hyderabad)">ap-south-2 (Hyderabad Hub)</option>
           </select>
-        </div>
-
-        <div class="form-group">
-          <label for="deploy-notes" class="form-label">Deployment Notes / Changelog</label>
-          <input type="text" id="deploy-notes" class="form-input" placeholder="e.g. Patch auth race condition & latency fixes" required>
         </div>
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="cancel-deploy-btn">Cancel</button>
           <button type="submit" class="btn btn-primary" id="confirm-deploy-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Launch Deployment</span>
+            <span>Spin Up Shard</span>
           </button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- Vanilla JavaScript Controller -->
+  <!-- Load JavaScript Controller (supports both app.js and java.js seamlessly) -->
   <script src="app.js"></script>
+  <script src="java.js"></script>
 </body>
 </html>

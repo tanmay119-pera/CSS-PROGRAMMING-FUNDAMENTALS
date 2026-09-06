@@ -8,31 +8,15 @@
  * heavyweight UI frameworks (Bootstrap, Tailwind, Material UI) or complex CSS
  * build toolchains. 
  * 
- * Modern CSS features (CSS Grid, Flexbox, Custom Properties, :has(), and
- * hardware-accelerated transforms) solve layout and state styling natively—with
+ * Modern CSS features (CSS Grid, Flexbox, Custom Properties, sticky positioning,
+ * and hardware-accelerated transforms) solve layout and state styling natively—with
  * zero bundle size, zero compilation steps, and instant rendering.
- * 
- * TABLE OF CONTENTS:
- * 1. CSS Custom Properties (Design Tokens / Theme Variables)
- * 2. CSS Reset & Base Typography
- * 3. Top Progress Loading Bar & Toast Notifications
- * 4. Application Layout (Sidebar + Main Viewport via Grid)
- * 5. Sidebar Navigation (Fixed / Collapsible state)
- * 6. Top Navigation Header
- * 7. Metric Cards (Auto-fit CSS Grid)
- * 8. Analytics & Node Telemetry Panels
- * 9. Activity & Trace Logs Table
- * 10. Native HTML5 <dialog> Modal
- * 11. Keyframe Animations & Micro-Interactions
- * 12. Responsive Breakpoints (Tablet & Mobile)
  * ==============================================================================
  */
 
 /* ==============================================================================
    1. CSS CUSTOM PROPERTIES (DESIGN TOKENS)
    ==============================================================================
-   CSS Variables allow centralized theme management. Changing any value here
-   instantly cascades throughout the entire application.
 */
 :root {
   /* Surface and Background Colors (Obsidian Dark Theme) */
@@ -40,12 +24,12 @@
   --bg-sidebar: #0d121f;           /* Sidebar dark surface */
   --bg-surface: #111827;           /* Card & panel surface */
   --bg-surface-elevated: #161f33;  /* Hovered or elevated surface */
-  --bg-surface-overlay: rgba(17, 24, 39, 0.85); /* Glassmorphism backdrop */
+  --bg-surface-overlay: rgba(17, 24, 39, 0.88); /* Glassmorphism backdrop */
   
   /* Border & Divider Colors */
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-focus: rgba(99, 102, 241, 0.5);
-  --border-light: rgba(255, 255, 255, 0.12);
+  --border-light: rgba(255, 255, 255, 0.14);
 
   /* Typography / Text Colors */
   --text-primary: #f8fafc;        /* High-contrast headings and primary values */
@@ -58,13 +42,13 @@
   --accent-primary-hover: #4f46e5;
   --accent-primary-glow: rgba(99, 102, 241, 0.35);
 
-  --accent-emerald: #10b981;      /* Emerald Green (Success, Run-Rate) */
+  --accent-emerald: #10b981;      /* Emerald Green (Success, Primary) */
   --accent-emerald-glow: rgba(16, 185, 129, 0.25);
   
   --accent-blue: #38bdf8;         /* Cyan / Sky Blue (Traffic, Live nodes) */
-  --accent-amber: #f59e0b;        /* Warning / Pending state */
+  --accent-amber: #f59e0b;        /* Warning / Syncing state */
   --accent-rose: #f43f5e;         /* Danger / Failed state */
-  --accent-purple: #a855f7;       /* Conversions */
+  --accent-purple: #a855f7;       /* Vector DB / AI */
 
   /* Dimensional Sizing & Layout Tokens */
   --sidebar-width: 260px;
@@ -79,7 +63,7 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.35), 0 2px 6px -2px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.45), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
-  --shadow-card-hover: 0 16px 32px -6px rgba(0, 0, 0, 0.6), 0 0 16px 0 rgba(99, 102, 241, 0.15);
+  --shadow-card-hover: 0 16px 32px -6px rgba(0, 0, 0, 0.6), 0 0 16px 0 rgba(99, 102, 241, 0.18);
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -90,7 +74,6 @@
 /* ==============================================================================
    2. MODERN CSS RESET & BASE TYPOGRAPHY
    ==============================================================================
-   `box-sizing: border-box` ensures padding and borders do not inflate widths.
 */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -115,7 +98,6 @@ body {
   background-color: var(--bg-app);
 }
 
-/* Monospace font utility for code, hashes, and durations */
 .mono-text, kbd {
   font-family: 'JetBrains Mono', monospace;
 }
@@ -149,18 +131,16 @@ button {
   background: var(--bg-app);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* ==============================================================================
    3. TOP PROGRESS LOADING BAR & TOAST NOTIFICATIONS
    ==============================================================================
-   The slim top loading bar is inspired by YouTube/GitHub. It runs across the
-   top of the viewport during simulated data sync and deployment actions.
 */
 .top-loader {
   position: fixed;
@@ -169,7 +149,7 @@ button {
   height: 3px;
   width: 0%;
   background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 5px #6366f1;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8), 0 0 6px #6366f1;
   z-index: 999999;
   transition: width var(--transition-fast), opacity var(--transition-normal);
   opacity: 0;
@@ -178,6 +158,16 @@ button {
 
 .top-loader.loading {
   opacity: 1;
+}
+
+/* Mobile backdrop: hidden on desktop by default so it NEVER breaks CSS Grid! */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 95;
 }
 
 /* Toast Floating Notification Container */
@@ -194,8 +184,8 @@ button {
 
 .toast {
   pointer-events: auto;
-  min-width: 280px;
-  max-width: 380px;
+  min-width: 290px;
+  max-width: 400px;
   padding: 12px 16px;
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-light);
@@ -217,8 +207,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   font-size: 13px;
   flex-shrink: 0;
@@ -228,26 +218,27 @@ button {
 .toast-icon.toast-warning { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
 
 .toast-message {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 500;
   color: var(--text-primary);
   flex: 1;
 }
 
 /* ==============================================================================
-   4. APPLICATION LAYOUT (CSS GRID)
+   4. APPLICATION LAYOUT (PURE CSS GRID)
    ==============================================================================
-   `display: grid` with `grid-template-columns: auto 1fr` creates a rock-solid
-   sidebar-plus-content layout that never janks or relies on float hacks.
+   `display: grid` with `grid-template-columns: var(--sidebar-width) 1fr`
+   creates a rock-solid sidebar-plus-content layout that never janks.
 */
 .app-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   min-height: 100vh;
+  width: 100%;
   transition: grid-template-columns var(--transition-smooth);
 }
 
-/* When the sidebar is collapsed by user */
+/* When the sidebar is collapsed */
 .app-layout.sidebar-is-collapsed {
   grid-template-columns: var(--sidebar-collapsed-width) 1fr;
 }
@@ -256,13 +247,12 @@ button {
   display: flex;
   flex-direction: column;
   min-width: 0; /* Prevents flex children from overflowing table/grid */
-  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 70%), var(--bg-app);
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 65%), var(--bg-app);
 }
 
 /* ==============================================================================
    5. SIDEBAR NAVIGATION
    ==============================================================================
-   Sticky/fixed positioning with clean flex column hierarchy.
 */
 .sidebar {
   position: sticky;
@@ -412,9 +402,9 @@ button {
 /* Active Navigation Item Styling */
 .nav-item.active .nav-link {
   color: #fff;
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.03) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.16) 0%, rgba(99, 102, 241, 0.03) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.12);
 }
 
 .nav-item.active .nav-icon {
@@ -448,11 +438,11 @@ button {
 .badge-emerald { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
 .badge-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
 
-/* Sidebar Footer & Admin Persona ('tanmay') */
+/* Sidebar Footer & Admin Persona ('Tanmay') */
 .sidebar-footer {
   padding: 14px 12px;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .user-card {
@@ -482,7 +472,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1rem;
   color: #fff;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
@@ -513,7 +503,6 @@ button {
   font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
-  text-transform: capitalize;
   letter-spacing: -0.01em;
 }
 
@@ -532,10 +521,7 @@ button {
   color: #fff;
 }
 
-/* ==============================================================================
-   COLLAPSED SIDEBAR RULES (Modern CSS transforms)
-   ==============================================================================
-*/
+/* Collapsed Sidebar Rules */
 .app-layout.sidebar-is-collapsed .brand-text,
 .app-layout.sidebar-is-collapsed .nav-section-label,
 .app-layout.sidebar-is-collapsed .nav-label,
@@ -559,13 +545,12 @@ button {
 /* ==============================================================================
    6. TOP NAVIGATION HEADER
    ==============================================================================
-   Frosted glass backdrop effect with search bar and action buttons.
 */
 .top-nav {
   position: sticky;
   top: 0;
   height: var(--header-height);
-  padding: 0 28px;
+  padding: 0 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -614,7 +599,7 @@ button {
 /* Center Global Search Box */
 .top-nav-center {
   flex: 1;
-  max-width: 440px;
+  max-width: 480px;
 }
 
 .search-box {
@@ -669,7 +654,7 @@ button {
   gap: 12px;
 }
 
-/* Reusable Button Component Styles */
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -706,11 +691,6 @@ button {
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.09);
   border-color: var(--border-light);
-}
-
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 0.8rem;
 }
 
 .btn-icon {
@@ -752,7 +732,7 @@ button {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  width: 320px;
+  width: 330px;
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
@@ -845,9 +825,9 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
 }
@@ -868,22 +848,18 @@ button {
 .header-username {
   font-size: 0.85rem;
   font-weight: 600;
-  text-transform: capitalize;
 }
 
 /* ==============================================================================
-   7. DASHBOARD MAIN CONTENT & AUTO-FIT METRICS GRID
+   7. DASHBOARD MAIN CONTENT & METRIC CARDS
    ==============================================================================
-   THE ANTI-FRAMEWORK PROVING GROUND:
-   `grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))` creates a
-   flawless responsive multi-column layout without 50 media queries or 15 nested
-   divs from Bootstrap/Tailwind.
 */
 .dashboard-content {
   padding: 32px 36px;
   display: flex;
   flex-direction: column;
   gap: 28px;
+  width: 100%;
 }
 
 /* Welcome Section */
@@ -915,7 +891,7 @@ button {
   margin-top: 4px;
 }
 
-/* Timeframe Filter Tabs */
+/* Region Selector Tabs */
 .timeframe-tabs {
   display: flex;
   align-items: center;
@@ -950,6 +926,7 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
+  width: 100%;
 }
 
 .metric-card {
@@ -1011,8 +988,8 @@ button {
   gap: 4px;
 }
 
-.metric-prefix, .metric-unit {
-  font-size: 1.35rem;
+.metric-unit {
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-secondary);
 }
@@ -1034,9 +1011,6 @@ button {
 .trend-positive {
   color: var(--accent-emerald);
 }
-.trend-negative {
-  color: var(--accent-rose);
-}
 .trend-sub {
   color: var(--text-muted);
   font-weight: 400;
@@ -1054,163 +1028,41 @@ button {
 }
 
 /* ==============================================================================
-   8. ANALYTICS & NODE TELEMETRY PANELS
+   8. SCROLLABLE DATABASE PANEL & TABLE
    ==============================================================================
-   CSS Grid: 2fr for the SVG line chart, 1fr for the live telemetry meters.
+   High-performance scrollable database view with sticky glass headers,
+   custom scrollbar, animated pulse indicators, and Indian engineer profiles.
 */
-.visuals-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-}
-
-.panel-card {
+.database-panel {
+  padding: 24px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 24px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  box-shadow: var(--shadow-md);
 }
 
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 16px;
-}
-
-.panel-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.panel-subtitle {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-  display: block;
-}
-
-.chart-legend {
+.database-title-badge {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.dot-indigo { background-color: var(--accent-primary); }
-.dot-emerald { background-color: var(--accent-emerald); }
-
-/* SVG Chart Container */
-.chart-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.pure-svg-chart {
-  width: 100%;
-  height: 200px;
-  overflow: visible;
-}
-
-.chart-point {
-  cursor: pointer;
-  transition: r var(--transition-fast), fill var(--transition-fast);
-}
-.chart-point:hover {
-  r: 7px;
-  fill: #fff;
-}
-
-.chart-x-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Node Telemetry Gauges */
-.telemetry-list {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  flex: 1;
-}
-
-.telemetry-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.telemetry-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.85rem;
-}
-
-.telemetry-label {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.telemetry-value {
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  color: #fff;
-}
-
-.progress-track {
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.fill-emerald { background: linear-gradient(90deg, #10b981, #34d399); }
-.fill-indigo { background: linear-gradient(90deg, #6366f1, #818cf8); }
-.fill-cyan { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
-.fill-violet { background: linear-gradient(90deg, #a855f7, #c084fc); }
-
-.health-actions {
-  display: flex;
   gap: 10px;
-  margin-top: 22px;
 }
 
-/* ==============================================================================
-   9. ACTIVITY & TRACE LOGS TABLE
-   ==============================================================================
-   Clean modern dark table with filter tabs and real-time query feedback.
-*/
-.table-panel {
-  padding: 24px;
+.pulse-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--accent-emerald);
+  box-shadow: 0 0 10px var(--accent-emerald);
+  animation: pulseLive 1.8s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.9); box-shadow: 0 0 4px var(--accent-emerald); }
+  50% { transform: scale(1.2); box-shadow: 0 0 14px var(--accent-emerald); }
+  100% { transform: scale(0.9); box-shadow: 0 0 4px var(--accent-emerald); }
 }
 
 .table-header-bar {
@@ -1244,44 +1096,59 @@ button {
   color: #fff;
 }
 .filter-pill.active {
-  background-color: rgba(99, 102, 241, 0.2);
+  background-color: rgba(99, 102, 241, 0.25);
   color: #fff;
 }
 
-.table-responsive {
-  width: 100%;
+/* SCROLLABLE DATABASE CONTAINER */
+.database-scroll-container {
+  max-height: 520px;
+  overflow-y: auto;
   overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: rgba(8, 12, 20, 0.5);
+  position: relative;
 }
 
-.data-table {
+.database-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-.data-table th {
-  padding: 12px 14px;
-  font-size: 0.75rem;
+/* STICKY TABLE HEADER */
+.database-table thead th {
+  position: sticky;
+  top: 0;
+  background: #101625;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 10;
+  padding: 14px 16px;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.data-table td {
-  padding: 14px;
+.database-table tbody td {
+  padding: 14px 16px;
   font-size: 0.88rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   vertical-align: middle;
 }
 
-.data-table tbody tr {
-  transition: background-color var(--transition-fast), opacity 0.25s;
+/* Row motion */
+.db-row {
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
 }
-
-.data-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+.db-row:hover {
+  transform: translateX(4px);
+  background-color: rgba(99, 102, 241, 0.06);
 }
 
 .resource-cell {
@@ -1301,28 +1168,74 @@ button {
 }
 
 .resource-name {
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
   color: #fff;
 }
 
 .resource-id {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-family: 'JetBrains Mono', monospace;
   color: var(--text-muted);
 }
 
-.type-tag {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.initiator-badge {
+/* Engine Badges */
+.engine-badge {
   display: inline-block;
   padding: 3px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.engine-postgres { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); }
+.engine-redis { background: rgba(244, 63, 94, 0.12); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.25); }
+.engine-mysql { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); }
+.engine-vector { background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); }
+.engine-clickhouse { background: rgba(234, 179, 8, 0.12); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.25); }
+.engine-kafka { background: rgba(6, 182, 212, 0.12); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.25); }
+
+/* Indian Engineers Tags */
+.engineer-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.engineer-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.avatar-as { background: linear-gradient(135deg, #10b981, #06b6d4); }
+.avatar-pp { background: linear-gradient(135deg, #6366f1, #a855f7); }
+.avatar-rg { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+.avatar-ai { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+.avatar-vm { background: linear-gradient(135deg, #14b8a6, #3b82f6); }
+.avatar-nv { background: linear-gradient(135deg, #f97316, #eab308); }
+.avatar-av { background: linear-gradient(135deg, #06b6d4, #6366f1); }
+.avatar-kn { background: linear-gradient(135deg, #84cc16, #10b981); }
+.avatar-ds { background: linear-gradient(135deg, #8b5cf6, #3b82f6); }
+.avatar-ij { background: linear-gradient(135deg, #06b6d4, #10b981); }
+.avatar-pr { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+.avatar-rk { background: linear-gradient(135deg, #f59e0b, #10b981); }
+
+.engineer-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.region-pill {
   font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
   color: var(--text-secondary);
 }
 
@@ -1344,26 +1257,63 @@ button {
 }
 
 .status-success {
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16, 185, 129, 0.14);
   color: var(--accent-emerald);
 }
 .status-success .dot { background-color: var(--accent-emerald); }
 
+.status-replica {
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-blue);
+}
+.status-replica .dot { background-color: var(--accent-blue); }
+
 .status-pending {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.14);
   color: var(--accent-amber);
 }
 .status-pending .dot { background-color: var(--accent-amber); }
 
-.status-failed {
-  background: rgba(244, 63, 94, 0.12);
-  color: var(--accent-rose);
+/* Table Storage Bar */
+.table-storage-bar {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.status-failed .dot { background-color: var(--accent-rose); }
 
-.sub-text {
+.storage-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  font-size: 0.82rem;
+}
+
+.progress-track {
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fill-emerald { background: linear-gradient(90deg, #10b981, #34d399); }
+.fill-indigo { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.fill-cyan { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+.fill-violet { background: linear-gradient(90deg, #a855f7, #c084fc); }
+.fill-amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+.latency-fast {
+  color: var(--accent-emerald);
+  font-weight: 600;
+}
+.latency-warn {
+  color: var(--accent-amber);
+  font-weight: 600;
 }
 
 .text-right {
@@ -1373,7 +1323,7 @@ button {
 .table-action-btn {
   padding: 5px 12px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
   font-size: 0.78rem;
   font-weight: 600;
@@ -1382,17 +1332,23 @@ button {
 }
 
 .table-action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border-color: var(--border-light);
 }
 
+.btn-action-glow:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+  color: #fff;
+}
+
 .btn-retry {
-  color: var(--accent-rose);
-  border-color: rgba(244, 63, 94, 0.3);
+  color: var(--accent-amber);
+  border-color: rgba(245, 158, 11, 0.3);
 }
 .btn-retry:hover {
-  background: rgba(244, 63, 94, 0.1);
+  background: rgba(245, 158, 11, 0.15);
   color: #fff;
 }
 
@@ -1411,10 +1367,8 @@ button {
 }
 
 /* ==============================================================================
-   10. NATIVE HTML5 <dialog> MODAL
+   9. NATIVE HTML5 <dialog> MODAL
    ==============================================================================
-   `dialog::backdrop` uses native CSS backdrop-filter blur.
-   No modal plugin or JavaScript portal required.
 */
 .modal-dialog {
   margin: auto;
@@ -1428,9 +1382,8 @@ button {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
 }
 
-/* Native backdrop pseudo-element */
 .modal-dialog::backdrop {
-  background: rgba(8, 12, 20, 0.75);
+  background: rgba(8, 12, 20, 0.78);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: backdropFade 0.25s ease-out;
@@ -1523,7 +1476,7 @@ button {
 }
 
 /* ==============================================================================
-   11. FOOTER & MISCELLANEOUS
+   10. FOOTER
    ==============================================================================
 */
 .app-footer {
@@ -1550,9 +1503,8 @@ button {
 }
 
 /* ==============================================================================
-   12. KEYFRAME ANIMATIONS & MOTION
+   11. KEYFRAME ANIMATIONS
    ==============================================================================
-   Hardware-accelerated transforms for 60+ FPS motion.
 */
 @keyframes slideInToast {
   from {
@@ -1611,15 +1563,9 @@ button {
 }
 
 /* ==============================================================================
-   13. RESPONSIVE BREAKPOINTS (TABLET & MOBILE)
+   12. RESPONSIVE BREAKPOINTS (TABLET & MOBILE)
    ==============================================================================
 */
-@media (max-width: 1024px) {
-  .visuals-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 768px) {
   .app-layout {
     grid-template-columns: 1fr;
@@ -1640,15 +1586,6 @@ button {
     transform: translateX(0);
   }
 
-  .sidebar-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 95;
-  }
-
   .sidebar-backdrop.active {
     display: block;
   }
@@ -1662,7 +1599,7 @@ button {
   }
 
   .top-nav-center {
-    display: none; /* Collapses on mobile to conserve header space */
+    display: none;
   }
 
   .dashboard-content {
