@@ -1,320 +1,805 @@
-/* Design System Variables */
+/* =====================================================================
+   PULSE DASHBOARD — STYLESHEET
+   =====================================================================
+   Reading order of this file (top to bottom):
+     1. Reset            — cancel out browser default weirdness
+     2. Design tokens     — every color/spacing value lives in ONE place
+     3. Base elements     — body, headings, links, buttons, inputs
+     4. Layout            — the sidebar + main grid
+     5. Sidebar
+     6. Topbar
+     7. Metric cards
+     8. Panels (table + bar chart)
+     9. Responsive rules   — how it all reflows on smaller screens
+    10. Accessibility & motion
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   1. RESET
+   Browsers ship with their own default margins/box-sizing that fight
+   you constantly. This resets the playing field to something sane.
+--------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box; /* padding/border no longer add to an element's set width — makes layout math predictable */
+  margin: 0;
+  padding: 0;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit; /* buttons/inputs don't inherit font by default — this fixes that */
+  color: inherit;
+  border: none;
+  background: none;
+}
+
+
+/* ---------------------------------------------------------------------
+   2. DESIGN TOKENS (CSS Custom Properties)
+   Instead of typing a hex code 40 times across the file, we name it
+   once here and reference it everywhere as var(--name). Change the
+   color in ONE place and the whole dashboard updates.
+
+   This is also what makes dark mode possible with zero JavaScript
+   styling logic: the [data-theme="dark"] block below simply redefines
+   the SAME variable names with different values. Every rule that uses
+   var(--bg) doesn't need to know or care which theme is active.
+--------------------------------------------------------------------- */
 :root {
-    --bg-main: #0f1117;
-    --bg-surface: #181b24;
-    --bg-card: #212631;
-    --border-color: #2e3646;
-    --text-main: #f0f3f6;
-    --text-muted: #8b949e;
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
-    --success: #238636;
-    --warning: #d29922;
-    --danger: #f85149;
-    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* --- brand palette --- */
+  --navy: #14213d;
+  --navy-soft: #1c2c52;
+  --gold: #fca311;
+  --teal: #1fae8e;
+  --coral: #e5484d;
+
+  /* --- semantic tokens (what things ARE, not raw colors) --- */
+  --bg: #f2f4f7;
+  --surface: #ffffff;
+  --surface-hover: #f8f9fb;
+  --border: #e4e7ec;
+  --text: #14213d;
+  --text-muted: #667085;
+  --text-inverse: #f5f6fa;
+
+  --sidebar-bg: var(--navy);
+  --sidebar-text: #c9d1e8;
+  --sidebar-text-active: #ffffff;
+
+  /* --- shape & motion tokens --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --shadow-card: 0 1px 2px rgba(20, 33, 61, 0.06);
+  --shadow-hover: 0 8px 20px rgba(20, 33, 61, 0.1);
+  --transition: 180ms ease;
+
+  /* --- layout tokens --- */
+  --sidebar-width: 250px;
+  --topbar-height: 68px;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+/* Dark mode: same variable NAMES, different values. Nothing else in
+   this file needs an "if dark mode" check — that's the whole trick. */
+[data-theme='dark'] {
+  --bg: #0f1626;
+  --surface: #182238;
+  --surface-hover: #1e2a45;
+  --border: #2a3654;
+  --text: #eef1f8;
+  --text-muted: #97a1c1;
+  --text-inverse: #0f1626;
+
+  --sidebar-bg: #0b1220;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
+
+/* ---------------------------------------------------------------------
+   3. BASE ELEMENTS
+--------------------------------------------------------------------- */
 body {
-    font-family: var(--font-sans);
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    min-height: 100vh;
-    overflow-x: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  /* Colors/backgrounds fade smoothly when the theme toggle flips data-theme */
+  transition: background-color var(--transition), color var(--transition);
 }
 
-/* Macro Layout: CSS Grid for Dashboard structure */
-.dashboard-container {
-    display: grid;
-    grid-template-areas: "sidebar main";
-    grid-template-columns: 260px 1fr;
-    min-height: 100vh;
-    transition: grid-template-columns 0.3s ease;
+h1,
+h2 {
+  font-family: 'Sora', sans-serif; /* the "display" font — used only for headings & big numbers */
+  font-weight: 700;
+  color: var(--text);
 }
 
-/* Sidebar Styles */
+/* Utility: visually hides an element but keeps it readable by screen readers.
+   Used on the table's <caption> — sighted users get plenty of context from
+   the panel heading above the table, but screen reader users benefit from
+   an explicit caption. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------------------
+   4. LAYOUT — the two-column app shell
+   This ONE rule is the entire "framework" this project set out to
+   replace. Two columns: a fixed-width sidebar, and a flexible column
+   that takes up whatever space is left ("1fr").
+--------------------------------------------------------------------- */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 100vh;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevents the table/content from forcing the column wider than the viewport */
+}
+
+/* Mobile overlay/backdrop behind the sidebar. Hidden by default;
+   JS adds .is-visible when the mobile menu opens. */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0; /* shorthand for top/right/bottom/left: 0 — covers the whole screen */
+  background: rgba(15, 22, 38, 0.5);
+  z-index: 40;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.overlay.is-visible {
+  display: block;
+  opacity: 1;
+}
+
+
+/* ---------------------------------------------------------------------
+   5. SIDEBAR
+   On desktop this just sits in the grid's first column. On mobile
+   (see media query near the bottom) it becomes a fixed, off-canvas
+   panel that slides in with a transform.
+--------------------------------------------------------------------- */
 .sidebar {
-    grid-area: sidebar;
-    background-color: var(--bg-surface);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    z-index: 10;
-    transition: transform 0.3s ease;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column; /* stacks brand -> nav -> user vertically */
+  gap: 32px;
+  transition: background-color var(--transition), transform var(--transition);
 }
 
-.sidebar-header h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 2rem;
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  color: #ffffff;
 }
 
-.sidebar-header .accent {
-    color: var(--accent);
+.brand-mark {
+  color: var(--gold); /* the logo icon picks up the accent color */
 }
 
-.nav-links {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.brand-name {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
 }
 
-.nav-links a {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-weight: 500;
-    border-radius: 6px;
-    transition: all 0.2s ease;
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1; /* pushes .sidebar__user down to the bottom via the flex parent */
 }
 
-.nav-links a:hover, .nav-links a.active {
-    color: var(--text-main);
-    background-color: var(--bg-card);
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-/* Main Content Wrapper */
-.main-wrapper {
-    grid-area: main;
-    display: flex;
-    flex-direction: column;
-    min-width: 0; /* Prevents flex items from overflowing grid bounds */
+/* A hairline divider above the "secondary" list (Settings), so it reads
+   as its own group without needing an all-caps label above it. */
+.nav-list--secondary {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 16px;
 }
 
-/* Top Navigation Bar */
-.top-bar {
-    height: 70px;
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 5;
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color var(--transition), color var(--transition);
 }
 
-.menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text-main);
-    font-size: 1.5rem;
-    cursor: pointer;
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--sidebar-text-active);
 }
 
-.search-bar input {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    color: var(--text-main);
-    font-size: 0.875rem;
-    width: 280px;
-    outline: none;
-    transition: border-color 0.2s;
+/* The active page gets the gold accent as a solid pill — this is the
+   ONE bold color moment in the sidebar, so it's immediately findable */
+.nav-link.is-active {
+  background-color: var(--gold);
+  color: var(--navy);
+  font-weight: 600;
 }
 
-.search-bar input:focus {
-    border-color: var(--accent);
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+.sidebar__user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    background-color: var(--success);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--success);
+.sidebar__user-role {
+  font-size: 0.75rem;
+  color: var(--sidebar-text);
 }
 
-/* Content Body Layout */
-.content-body {
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    max-width: 1400px;
-    width: 100%;
-    margin: 0 auto;
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background-color: var(--gold);
+  color: var(--navy);
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
-.page-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+.avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
 }
 
-.page-header p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    margin-top: 0.25rem;
+
+/* ---------------------------------------------------------------------
+   6. TOPBAR
+--------------------------------------------------------------------- */
+.topbar {
+  height: var(--topbar-height);
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  position: sticky; /* stays visible when the page content scrolls */
+  top: 0;
+  z-index: 20;
+  transition: background-color var(--transition), border-color var(--transition);
 }
 
-/* Metrics Grid using auto-fit and clamp */
+.topbar__title {
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+/* The search box grows to fill available space between the title and
+   the action icons, but never past a comfortable max width */
+.topbar__search {
+  flex: 1;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-muted);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.topbar__search:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(252, 163, 17, 0.15);
+}
+
+.topbar__search input {
+  flex: 1;
+  color: var(--text);
+}
+
+.topbar__search input::placeholder {
+  color: var(--text-muted);
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto; /* shoves the whole action group to the far right */
+}
+
+/* Generic round icon button used for the hamburger, theme toggle, and bell */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  position: relative;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.icon-btn:hover {
+  background-color: var(--surface-hover);
+  color: var(--text);
+}
+
+/* Only the hamburger button is shown on mobile — hidden on desktop by default */
+#menuToggle {
+  display: none;
+}
+
+.badge-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--coral);
+  border: 2px solid var(--surface);
+}
+
+/* Theme toggle button: shows ONE of the two icons at a time depending on
+   the current theme. Both icons live in the HTML; CSS just hides one. */
+.icon-moon {
+  display: none;
+}
+
+[data-theme='dark'] .icon-sun {
+  display: none;
+}
+
+[data-theme='dark'] .icon-moon {
+  display: block;
+}
+
+/* --- Avatar dropdown menu --- */
+.avatar-menu {
+  position: relative; /* the dropdown below is positioned relative to THIS element */
+}
+
+.avatar-menu__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition);
+}
+
+.avatar-menu__trigger:hover {
+  background-color: var(--surface-hover);
+}
+
+.avatar-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hover);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  /* Hidden by default using opacity + a tiny vertical shift + pointer-events,
+     NOT display:none — that lets us transition it smoothly instead of it
+     just popping into existence. JS toggles the .is-open class below. */
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.avatar-menu__dropdown.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.avatar-menu__dropdown a {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.avatar-menu__dropdown a:hover {
+  background-color: var(--surface-hover);
+}
+
+
+/* ---------------------------------------------------------------------
+   7. PAGE CONTENT + METRIC CARDS
+--------------------------------------------------------------------- */
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/*
+  THE HEADLINE CSS TRICK OF THIS WHOLE PROJECT.
+  auto-fit + minmax means: "fit as many 220px+ columns as will comfortably
+  fit in the row, and stretch them evenly to fill any leftover space."
+  Resize the browser window and watch the card count change with NO
+  media query and NO JavaScript involved.
+*/
 .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
 }
 
-.card {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    position: relative;
+.metric-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition), transform var(--transition),
+    background-color var(--transition), border-color var(--transition);
 }
 
-.card h3 {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    font-weight: 500;
+/* A small, deliberate hover lift — this is the ONE hover motion on the
+   page's repeated elements, kept subtle rather than added everywhere */
+.metric-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
 }
 
-.metric-value {
-    font-size: clamp(1.5rem, 2vw, 2.25rem);
-    font-weight: 700;
-    letter-spacing: -1px;
+.metric-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
-/* Badges */
-.badge {
-    align-self: flex-start;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+/* Each metric gets a different accent so the eye can tell them apart at
+   a glance, using color the way the brief calls "information not decoration" */
+.metric-card__icon--gold {
+  background-color: rgba(252, 163, 17, 0.14);
+  color: var(--gold);
+}
+.metric-card__icon--teal {
+  background-color: rgba(31, 174, 142, 0.14);
+  color: var(--teal);
+}
+.metric-card__icon--coral {
+  background-color: rgba(229, 72, 77, 0.14);
+  color: var(--coral);
+}
+.metric-card__icon--navy {
+  background-color: rgba(20, 33, 61, 0.08);
+  color: var(--navy);
+}
+[data-theme='dark'] .metric-card__icon--navy {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text);
 }
 
-.badge.positive { background-color: rgba(35, 134, 54, 0.2); color: #3fb950; }
-.badge.negative { background-color: rgba(248, 81, 73, 0.2); color: #ff7b72; }
-.badge.neutral { background-color: rgba(139, 148, 158, 0.2); color: var(--text-muted); }
-
-/* Table Section Styling */
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+.metric-card__label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
 }
 
-.action-btn {
-    background: none;
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.metric-card__value {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
-.action-btn:hover {
-    background-color: var(--bg-card);
+.metric-card__trend {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.table-responsive {
-    overflow-x: auto;
+.metric-card__trend--up {
+  color: var(--teal);
+}
+
+.metric-card__trend--down {
+  color: var(--coral);
+}
+
+/* Drawing a triangle with pure CSS borders — a classic trick. Three
+   sides transparent, one colored, and the shape collapses to a point. */
+.trend-arrow {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+.metric-card__trend--up .trend-arrow {
+  border-bottom: 6px solid var(--teal); /* points UP */
+}
+
+.metric-card__trend--down .trend-arrow {
+  border-top: 6px solid var(--coral); /* points DOWN */
+}
+
+
+/* ---------------------------------------------------------------------
+   8. PANELS — activity table + top products bar list
+--------------------------------------------------------------------- */
+.panels {
+  display: flex;
+  flex-wrap: wrap; /* this single property is what lets the layout restack on narrow screens */
+  gap: 16px;
+}
+
+.panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  transition: background-color var(--transition), border-color var(--transition);
+}
+
+/* flex-basis sets each panel's "natural" width before wrapping;
+   flex-grow (the middle number) lets the table panel claim extra space */
+.panel--table {
+  flex: 2 1 420px;
+}
+
+.panel--stats {
+  flex: 1 1 260px;
+}
+
+.panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.panel__header h2 {
+  font-size: 1rem;
+}
+
+.panel__link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.panel__link:hover {
+  text-decoration: underline;
+}
+
+/* Lets the table scroll horizontally on its own if the panel gets too
+   narrow, instead of squashing the whole page layout */
+.table-scroll {
+  overflow-x: auto;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 0.875rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
 }
 
 th {
-    color: var(--text-muted);
-    font-weight: 600;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  padding: 0 12px 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
-tr:last-child td {
-    border-bottom: none;
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
-code {
-    background-color: var(--bg-card);
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.8rem;
-    color: var(--accent);
+tbody tr {
+  transition: background-color var(--transition);
 }
 
-/* Status Indicators inside Table */
-.status {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
+tbody tr:hover {
+  background-color: var(--surface-hover);
 }
 
-.status.success { background-color: rgba(35, 134, 54, 0.15); color: #3fb950; }
-.status.pending { background-color: rgba(210, 153, 34, 0.15); color: #e3b341; }
-.status.failed { background-color: rgba(248, 81, 73, 0.15); color: #ff7b72; }
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 
-/* Responsive Mobile Breakpoint handled gracefully via native CSS */
-@media (max-width: 768px) {
-    .dashboard-container {
-        grid-template-areas: "main";
-        grid-template-columns: 1fr;
-    }
+.status-pill--success {
+  background-color: rgba(31, 174, 142, 0.14);
+  color: var(--teal);
+}
+.status-pill--warning {
+  background-color: rgba(252, 163, 17, 0.16);
+  color: #b56d00;
+}
+[data-theme='dark'] .status-pill--warning {
+  color: var(--gold);
+}
+.status-pill--danger {
+  background-color: rgba(229, 72, 77, 0.14);
+  color: var(--coral);
+}
 
-    .sidebar {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 260px;
-        transform: translateX(-100%);
-    }
+/* --- Top products bar list --- */
+.bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-    /* Toggled class via a minuscule JS helper */
-    .dashboard-container.sidebar-open .sidebar {
-        transform: translateX(0);
-    }
+.bar-item__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
 
-    .menu-btn {
-        display: block;
-    }
+.bar-item__row span:last-child {
+  color: var(--text-muted);
+  font-weight: 600;
+}
 
-    .search-bar {
-        display: none;
-    }
-    
-    .content-body {
-        padding: 1rem;
-    }
+.bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--border);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  width: 0; /* starts empty — script.js sets the real width a moment after load */
+  border-radius: 999px;
+  background-color: var(--gold);
+  /* Animating width on load gives the "bars filling in" effect —
+     see script.js, which reads each bar's data-width attribute */
+  transition: width 700ms ease;
+}
+
+
+/* ---------------------------------------------------------------------
+   9. RESPONSIVE RULES
+   Mobile-first purists would write min-width queries; we're using
+   max-width here because the desktop layout (grid) is the default and
+   we're peeling behaviour AWAY as the screen shrinks — which reads more
+   naturally for a dashboard that's primarily used on desktop.
+--------------------------------------------------------------------- */
+
+/* Tablet: hide search bar to give the title/actions more breathing room */
+@media (max-width: 880px) {
+  .topbar__search {
+    display: none;
+  }
+}
+
+/* Mobile: sidebar becomes an off-canvas panel instead of a grid column */
+@media (max-width: 720px) {
+  .app {
+    grid-template-columns: 1fr; /* collapse the two-column grid to one column */
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    z-index: 50;
+    transform: translateX(-100%); /* parked just off the left edge of the screen */
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0); /* slides fully into view */
+  }
+
+  #menuToggle {
+    display: inline-flex; /* the hamburger only makes sense once the sidebar is hidden */
+  }
+
+  .panel--table,
+  .panel--stats {
+    flex-basis: 100%; /* stack the two panels instead of sitting side by side */
+  }
+}
+
+
+/* ---------------------------------------------------------------------
+   10. ACCESSIBILITY & MOTION PREFERENCES
+--------------------------------------------------------------------- */
+
+/* A visible focus ring for keyboard users — never remove this without
+   replacing it with something equally visible. Mouse clicks don't
+   trigger :focus-visible, so this doesn't add a ring on every click. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect the operating-system-level "reduce motion" setting some
+   people rely on to avoid discomfort from animation. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
