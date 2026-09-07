@@ -19,8 +19,7 @@
   <img src="./banner.png" alt="friday-framework Banner" width="100%" style="max-width: 100%; height: auto; border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.65);" />
 </p>
 
-<!-- LIVE WAVING CAPSULE BANNER -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,5,7&height=220&section=header&text=FRIDAY%20FRAMEWORK&fontSize=42&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=The%20Anti-Framework%20Admin%20Dashboard%20%E2%80%A2%20Zero-Dependency%20Cloud%20Matrix&descAlignY=60&descAlign=50" width="100%" alt="Friday Framework Header Banner" />
+
 
 <!-- DYNAMIC TYPING SVG BANNER WITH AUTHOR CREDITS -->
 <p align="center">
@@ -216,8 +215,7 @@ Then visit: [`http://localhost:8000`](http://localhost:8000)
 **Agentic AI Developer • Systems & Software Engineer • Open-Source Creator**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tanmay119-pera)
-[![Portfolio](https://img.shields.io/badge/Portfolio-Live_Showcase-6366f1?style=for-the-badge&logo=google-chrome&logoColor=white)](#)
-[![Email](https://img.shields.io/badge/Contact-Direct_Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:tanmaysrivastava119@gmail.com)
+[![Email](https://img.shields.io/badge/Email-tanmay.w119%40gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:tanmay.w119@gmail.com)
 
 *Passionate about high-performance web systems, autonomous AI agents, and zero-dependency software engineering.*
 
