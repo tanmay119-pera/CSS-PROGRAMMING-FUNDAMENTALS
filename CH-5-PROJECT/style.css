@@ -881,6 +881,7 @@ button {
 .highlight-text {
   background: linear-gradient(90deg, #38bdf8, #10b981);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
 }
